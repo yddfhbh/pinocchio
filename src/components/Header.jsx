@@ -48,13 +48,24 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
           PINOCCHIO
         </Link>
 
-        <div className="header-right">
+        <nav className="nav">
+          <Link to="/">홈</Link>
+          <Link to="/about">동아리 소개</Link>
+          <Link to="/scores">악보실</Link>
+          <Link to="/videos">공연 영상</Link>
+          <Link to="/schedule">일정</Link>
+          <Link to="/guestbook">방명록</Link>
+        </nav>
+      </div>
+
+      <div className="header-admin-strip">
+        <div className="container header-admin-strip-inner">
           {isAdmin ? (
-            <div className="header-admin">
-              <span className="header-admin-badge">관리자</span>
+            <div className="header-admin-mini">
+              <span className="header-admin-mini-badge">관리자</span>
               <button
                 type="button"
-                className="btn btn-light header-admin-button"
+                className="btn btn-light header-admin-mini-button"
                 onClick={handleLogout}
                 disabled={isSubmitting}
               >
@@ -62,7 +73,7 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
               </button>
             </div>
           ) : (
-            <form className="header-admin" onSubmit={handleLogin}>
+            <form className="header-admin-mini" onSubmit={handleLogin}>
               <input
                 type="password"
                 placeholder="관리자 코드"
@@ -78,25 +89,16 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
               />
               <button
                 type="submit"
-                className="btn btn-dark header-admin-button"
+                className="btn btn-dark header-admin-mini-button"
                 disabled={!adminCode.trim() || isLoading || isSubmitting}
               >
-                {isLoading ? "확인 중..." : isSubmitting ? "로그인 중..." : "로그인"}
+                {isLoading ? "확인 중..." : isSubmitting ? "로그인" : "로그인"}
               </button>
             </form>
           )}
 
-          <nav className="nav">
-            <Link to="/">홈</Link>
-            <Link to="/about">동아리 소개</Link>
-            <Link to="/scores">악보실</Link>
-            <Link to="/videos">공연 영상</Link>
-            <Link to="/schedule">일정</Link>
-            <Link to="/guestbook">방명록</Link>
-          </nav>
-
           {status ? (
-            <p className={`guestbook-status header-admin-status is-${status.type}`}>
+            <p className={`guestbook-status header-admin-mini-status is-${status.type}`}>
               {status.text}
             </p>
           ) : null}
