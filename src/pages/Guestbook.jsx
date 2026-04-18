@@ -4,12 +4,15 @@ import {
   formatGuestbookDate,
   GUESTBOOK_ENTRY_LIMIT,
   GUESTBOOK_MESSAGE_LIMIT,
+  GUESTBOOK_NICKNAME_LIMIT,
+  getGuestbookDisplayName,
   postGuestbookEntry,
 } from "../lib/guestbook";
 
 function Guestbook() {
   const { entries, error, isLoading, setEntries } =
     useGuestbookEntries(GUESTBOOK_ENTRY_LIMIT);
+  const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,11 +35,15 @@ function Guestbook() {
     setIsSubmitting(true);
 
     try {
-      const entry = await postGuestbookEntry(trimmedMessage);
+      const entry = await postGuestbookEntry({
+        nickname,
+        message: trimmedMessage,
+      });
 
       setEntries((currentEntries) =>
         [entry, ...currentEntries].slice(0, GUESTBOOK_ENTRY_LIMIT)
       );
+      setNickname("");
       setMessage("");
       setStatus({
         type: "success",
@@ -58,9 +65,10 @@ function Guestbook() {
   return (
     <section className="page-section">
       <div className="container">
-        <h2>익명 방명록</h2>
+        <h2>방명록</h2>
         <p className="page-description">
           공연을 본 감상이나 응원의 메시지를 자유롭게 남겨주세요.
+          닉네임을 비워두면 익명으로 등록됩니다.
         </p>
 
         {error ? (
@@ -70,6 +78,27 @@ function Guestbook() {
         ) : null}
 
         <form className="guestbook-form" onSubmit={handleSubmit}>
+          <label className="guestbook-label" htmlFor="guestbook-nickname">
+            닉네임
+          </label>
+          <input
+            id="guestbook-nickname"
+            type="text"
+            placeholder="10자 이내, 비워두면 익명"
+            value={nickname}
+            maxLength={GUESTBOOK_NICKNAME_LIMIT}
+            onChange={(event) => {
+              setNickname(event.target.value);
+
+              if (status) {
+                setStatus(null);
+              }
+            }}
+          />
+          <p className="guestbook-form-hint guestbook-nickname-hint">
+            최대 {GUESTBOOK_NICKNAME_LIMIT}자까지 입력할 수 있어요.
+          </p>
+
           <label className="guestbook-label" htmlFor="guestbook-message">
             응원 메시지
           </label>
@@ -123,7 +152,7 @@ function Guestbook() {
               entries.map((entry) => (
                 <article className="guestbook-item" key={entry.id}>
                   <div className="guestbook-item-head">
-                    <strong>익명</strong>
+                    <strong>{getGuestbookDisplayName(entry.nickname)}</strong>
                     <span>{formatGuestbookDate(entry.createdAt)}</span>
                   </div>
                   <p>{entry.message}</p>

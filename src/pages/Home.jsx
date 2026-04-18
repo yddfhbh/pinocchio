@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import useGuestbookEntries from "../hooks/useGuestbookEntries";
-import { formatGuestbookDate } from "../lib/guestbook";
+import { formatGuestbookDate, getGuestbookDisplayName } from "../lib/guestbook";
 
 function Home() {
   const { entries: guestbookEntries, error, isLoading } = useGuestbookEntries(3);
@@ -95,7 +95,10 @@ function Home() {
                 guestbookEntries.map((entry) => (
                   <div className="guestbook-message" key={entry.id}>
                     <p>“{entry.message}”</p>
-                    <span>{formatGuestbookDate(entry.createdAt)}</span>
+                    <span>
+                      {getGuestbookDisplayName(entry.nickname)} ·{" "}
+                      {formatGuestbookDate(entry.createdAt)}
+                    </span>
                   </div>
                 ))
               ) : (

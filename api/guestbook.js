@@ -2,12 +2,14 @@ import {
   DEFAULT_GUESTBOOK_ENTRIES,
   GUESTBOOK_ENTRY_LIMIT,
   GUESTBOOK_MESSAGE_LIMIT,
+  GUESTBOOK_NICKNAME_LIMIT,
 } from "../src/lib/guestbook.js";
 import { ensureGuestbookTable, query } from "./_db.js";
 
 function toEntry(row) {
   return {
     id: String(row.id),
+    nickname: row.nickname,
     message: row.message,
     createdAt: row.created_at instanceof Date
       ? row.created_at.toISOString()
@@ -44,7 +46,7 @@ export default async function handler(request, response) {
       await ensureGuestbookTable();
 
       const result = await query(
-        `SELECT id, message, created_at
+        `SELECT id, nickname, message, created_at
          FROM guestbook_entries
          ORDER BY created_at DESC
          LIMIT $1`,
@@ -68,6 +70,10 @@ export default async function handler(request, response) {
   if (request.method === "POST") {
     try {
       const body = await readBody(request);
+      const nickname =
+        typeof body?.nickname === "string"
+          ? body.nickname.trim().slice(0, GUESTBOOK_NICKNAME_LIMIT)
+          : "";
       const message =
         typeof body?.message === "string"
           ? body.message.trim().slice(0, GUESTBOOK_MESSAGE_LIMIT)
@@ -82,10 +88,10 @@ export default async function handler(request, response) {
       await ensureGuestbookTable();
 
       const result = await query(
-        `INSERT INTO guestbook_entries (message)
-         VALUES ($1)
-         RETURNING id, message, created_at`,
-        [message]
+        `INSERT INTO guestbook_entries (nickname, message)
+         VALUES ($1, $2)
+         RETURNING id, nickname, message, created_at`,
+        [nickname || null, message]
       );
 
       return sendJson(response, 201, {

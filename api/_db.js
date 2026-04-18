@@ -55,13 +55,21 @@ export async function query(text, params) {
 
 export async function ensureGuestbookTable() {
   if (!initPromise) {
-    initPromise = query(
-      `CREATE TABLE IF NOT EXISTS guestbook_entries (
-        id BIGSERIAL PRIMARY KEY,
-        message TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )`
-    ).catch((error) => {
+    initPromise = (async () => {
+      await query(
+        `CREATE TABLE IF NOT EXISTS guestbook_entries (
+          id BIGSERIAL PRIMARY KEY,
+          nickname VARCHAR(10),
+          message TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`
+      );
+
+      await query(
+        `ALTER TABLE guestbook_entries
+         ADD COLUMN IF NOT EXISTS nickname VARCHAR(10)`
+      );
+    })().catch((error) => {
       initPromise = null;
       throw error;
     });
