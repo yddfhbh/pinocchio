@@ -340,9 +340,6 @@ function Schedule({ isAdmin }) {
                     <div className="schedule-day-events">
                       {day.entries.slice(0, 3).map((entry) => (
                         <span key={entry.id} className="schedule-day-chip" title={entry.title}>
-                          {entry.startTime ? (
-                            <span className="schedule-day-chip-time">{entry.startTime}</span>
-                          ) : null}
                           <span className="schedule-day-chip-title">{entry.title}</span>
                         </span>
                       ))}

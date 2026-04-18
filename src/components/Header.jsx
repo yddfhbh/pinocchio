@@ -48,31 +48,13 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
           PINOCCHIO
         </Link>
 
-        <nav className="nav">
-          <Link to="/">홈</Link>
-          <Link to="/about">동아리 소개</Link>
-          <Link to="/scores">악보실</Link>
-          <Link to="/videos">공연 영상</Link>
-          <Link to="/schedule">일정</Link>
-          <Link to="/guestbook">방명록</Link>
-        </nav>
-      </div>
-
-      <div className="admin-strip">
-        <div className="container admin-strip-inner">
-          <div className="admin-strip-copy">
-            <strong>관리자</strong>
-            <span>
-              로그인하면 일정 수정과 방명록 삭제를 바로 할 수 있습니다.
-            </span>
-          </div>
-
+        <div className="header-right">
           {isAdmin ? (
-            <div className="admin-strip-actions">
-              <span className="admin-strip-badge">로그인됨</span>
+            <div className="header-admin">
+              <span className="header-admin-badge">관리자</span>
               <button
                 type="button"
-                className="btn btn-light admin-strip-button"
+                className="btn btn-light header-admin-button"
                 onClick={handleLogout}
                 disabled={isSubmitting}
               >
@@ -80,7 +62,7 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
               </button>
             </div>
           ) : (
-            <form className="admin-strip-form" onSubmit={handleLogin}>
+            <form className="header-admin" onSubmit={handleLogin}>
               <input
                 type="password"
                 placeholder="관리자 코드"
@@ -96,22 +78,29 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
               />
               <button
                 type="submit"
-                className="btn btn-dark admin-strip-button"
+                className="btn btn-dark header-admin-button"
                 disabled={!adminCode.trim() || isLoading || isSubmitting}
               >
                 {isLoading ? "확인 중..." : isSubmitting ? "로그인 중..." : "로그인"}
               </button>
             </form>
           )}
-        </div>
 
-        {status ? (
-          <div className="container">
-            <p className={`guestbook-status admin-strip-status is-${status.type}`}>
+          <nav className="nav">
+            <Link to="/">홈</Link>
+            <Link to="/about">동아리 소개</Link>
+            <Link to="/scores">악보실</Link>
+            <Link to="/videos">공연 영상</Link>
+            <Link to="/schedule">일정</Link>
+            <Link to="/guestbook">방명록</Link>
+          </nav>
+
+          {status ? (
+            <p className={`guestbook-status header-admin-status is-${status.type}`}>
               {status.text}
             </p>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </header>
   );
