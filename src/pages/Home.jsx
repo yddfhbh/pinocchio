@@ -1,9 +1,20 @@
 import { Link } from "react-router-dom";
 import useGuestbookEntries from "../hooks/useGuestbookEntries";
+import useScheduleEntries from "../hooks/useScheduleEntries";
 import { formatGuestbookDate, getGuestbookDisplayName } from "../lib/guestbook";
+import {
+  formatScheduleDate,
+  formatScheduleTime,
+  getCategoryLabel,
+} from "../lib/schedule";
 
 function Home() {
   const { entries: guestbookEntries, error, isLoading } = useGuestbookEntries(3);
+  const {
+    entries: scheduleEntries,
+    error: scheduleError,
+    isLoading: isScheduleLoading,
+  } = useScheduleEntries(3);
 
   return (
     <div>
@@ -33,13 +44,38 @@ function Home() {
 
           <div className="hero-right">
             <div className="calendar-card">
-              <h3>동아리 일정</h3>
-              <div className="calendar-frame">
-                <iframe
-                  src="https://calendar.google.com/calendar/embed?src=ko.south_korea%23holiday%40group.v.calendar.google.com&ctz=Asia%2FSeoul"
-                  title="동아리 일정 캘린더"
-                  loading="lazy"
-                ></iframe>
+              <div className="calendar-card-head">
+                <h3>다가오는 일정</h3>
+                <Link to="/schedule" className="calendar-card-link">
+                  전체 보기
+                </Link>
+              </div>
+
+              <div className="calendar-preview-list">
+                {scheduleError ? (
+                  <div className="calendar-empty">
+                    서버 연결 전에는 예시 일정을 보여줍니다.
+                  </div>
+                ) : null}
+
+                {isScheduleLoading ? (
+                  <div className="calendar-empty">일정을 불러오는 중입니다.</div>
+                ) : scheduleEntries.length ? (
+                  scheduleEntries.map((entry) => (
+                    <article className="calendar-preview-item" key={entry.id}>
+                      <div className="calendar-preview-top">
+                        <span className="schedule-category-badge">
+                          {getCategoryLabel(entry.category)}
+                        </span>
+                        <span>{formatScheduleTime(entry.startTime, entry.endTime)}</span>
+                      </div>
+                      <h4>{entry.title}</h4>
+                      <p>{formatScheduleDate(entry.eventDate)}</p>
+                    </article>
+                  ))
+                ) : (
+                  <div className="calendar-empty">등록된 일정이 아직 없습니다.</div>
+                )}
               </div>
             </div>
           </div>

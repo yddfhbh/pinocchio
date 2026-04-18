@@ -2,7 +2,8 @@ import { attachDatabasePool } from "@vercel/functions";
 import { Pool } from "pg";
 
 let pool;
-let initPromise;
+let guestbookInitPromise;
+let scheduleInitPromise;
 
 function sanitizeConnectionString(connectionString) {
   try {
@@ -54,8 +55,8 @@ export async function query(text, params) {
 }
 
 export async function ensureGuestbookTable() {
-  if (!initPromise) {
-    initPromise = (async () => {
+  if (!guestbookInitPromise) {
+    guestbookInitPromise = (async () => {
       await query(
         `CREATE TABLE IF NOT EXISTS guestbook_entries (
           id BIGSERIAL PRIMARY KEY,
@@ -70,10 +71,56 @@ export async function ensureGuestbookTable() {
          ADD COLUMN IF NOT EXISTS nickname VARCHAR(10)`
       );
     })().catch((error) => {
-      initPromise = null;
+      guestbookInitPromise = null;
       throw error;
     });
   }
 
-  return initPromise;
+  return guestbookInitPromise;
+}
+
+export async function ensureScheduleTable() {
+  if (!scheduleInitPromise) {
+    scheduleInitPromise = (async () => {
+      await query(
+        `CREATE TABLE IF NOT EXISTS schedule_entries (
+          id BIGSERIAL PRIMARY KEY,
+          title VARCHAR(80) NOT NULL,
+          description TEXT,
+          category VARCHAR(30),
+          event_date DATE NOT NULL,
+          start_time VARCHAR(5),
+          end_time VARCHAR(5),
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`
+      );
+
+      await query(
+        `ALTER TABLE schedule_entries
+         ADD COLUMN IF NOT EXISTS description TEXT`
+      );
+      await query(
+        `ALTER TABLE schedule_entries
+         ADD COLUMN IF NOT EXISTS category VARCHAR(30)`
+      );
+      await query(
+        `ALTER TABLE schedule_entries
+         ADD COLUMN IF NOT EXISTS start_time VARCHAR(5)`
+      );
+      await query(
+        `ALTER TABLE schedule_entries
+         ADD COLUMN IF NOT EXISTS end_time VARCHAR(5)`
+      );
+      await query(
+        `ALTER TABLE schedule_entries
+         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+      );
+    })().catch((error) => {
+      scheduleInitPromise = null;
+      throw error;
+    });
+  }
+
+  return scheduleInitPromise;
 }
