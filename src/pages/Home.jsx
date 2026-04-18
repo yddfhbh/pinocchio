@@ -42,56 +42,56 @@ function Home() {
         </div>
       </section>
 
-      <section className="home-video-section compact-section">
-        <div className="container">
-          <div className="section-title-wrap">
-            <h2>대표 공연 영상</h2>
-            <p>메인 페이지에서 바로 볼 수 있는 대표 영상입니다.</p>
+      <section className="media-guestbook-section compact-section">
+        <div className="container media-guestbook-grid">
+          <div className="media-column">
+            <div className="section-title-wrap">
+              <h2>대표 공연 영상</h2>
+              <p>메인 페이지에서 바로 볼 수 있는 대표 영상입니다.</p>
+            </div>
+
+            <div className="home-video-card small-video-card">
+              <div className="video-frame small-video-frame">
+                <iframe
+                  src="https://www.youtube.com/embed/bZxeSLM4TWs"
+                  title="Where is BLUE (김푸른 리사이틀) 1부"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+
+              <div className="video-info">
+                <h3>Where is BLUE (김푸른 리사이틀) 1부</h3>
+                <p>
+                  피노키오의 대표 공연 영상입니다.
+                  메인 페이지에서 바로 공연 분위기를 확인할 수 있습니다.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="home-video-card small-video-card">
-            <div className="video-frame small-video-frame">
-              <iframe
-                src="https://www.youtube.com/embed/bZxeSLM4TWs"
-                title="Where is BLUE (김푸른 리사이틀) 1부"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+          <div className="guestbook-column">
+            <div className="section-title-wrap">
+              <h2>방명록</h2>
+              <p>짧은 응원과 한마디를 남길 수 있는 공간입니다.</p>
             </div>
 
-            <div className="video-info">
-              <h3>Where is BLUE (김푸른 리사이틀) 1부</h3>
-              <p>
-                피노키오의 대표 공연 영상입니다.
-                메인 페이지에서 바로 공연 분위기를 확인할 수 있습니다.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+            <div className="guestbook-preview-card guestbook-side-card">
+              <div className="guestbook-message">
+                <p>“피노키오 공연 정말 잘 봤어요. 다음 공연도 기대할게요!”</p>
+              </div>
+              <div className="guestbook-message">
+                <p>“홈페이지가 깔끔해서 동아리 분위기가 더 잘 느껴져요.”</p>
+              </div>
+              <div className="guestbook-message">
+                <p>“연주도 멋지고 기록이 남는다는 게 정말 좋은 것 같아요.”</p>
+              </div>
 
-      <section className="guestbook-preview-section compact-section">
-        <div className="container">
-          <div className="section-title-wrap">
-            <h2>방명록</h2>
-            <p>짧은 응원과 한마디를 남길 수 있는 공간입니다.</p>
-          </div>
-
-          <div className="guestbook-preview-card">
-            <div className="guestbook-message">
-              <p>“피노키오 공연 정말 잘 봤어요. 다음 공연도 기대할게요!”</p>
-            </div>
-            <div className="guestbook-message">
-              <p>“홈페이지가 깔끔해서 동아리 분위기가 더 잘 느껴져요.”</p>
-            </div>
-            <div className="guestbook-message">
-              <p>“연주도 멋지고 기록이 남는다는 게 정말 좋은 것 같아요.”</p>
-            </div>
-
-            <div className="guestbook-button-wrap">
-              <Link to="/guestbook" className="btn btn-dark">
-                방명록 보러 가기
-              </Link>
+              <div className="guestbook-button-wrap">
+                <Link to="/guestbook" className="btn btn-dark">
+                  방명록 보러 가기
+                </Link>
+              </div>
             </div>
           </div>
         </div>
