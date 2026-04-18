@@ -10,8 +10,6 @@ import {
   getCategoryLabel,
   getMonthWeekdayDates,
   getMonthStart,
-  loginScheduleAdmin,
-  logoutScheduleAdmin,
   normalizeScheduleEntries,
   saveScheduleEntry,
   toDateKey,
@@ -20,14 +18,11 @@ import {
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
 const defaultCategory = "연습";
 
-function Schedule() {
-  const { entries, setEntries, isAdmin, setIsAdmin, isLoading, error, reload } =
-    useScheduleEntries();
+function Schedule({ isAdmin }) {
+  const { entries, setEntries, isLoading, error } = useScheduleEntries();
   const todayKey = toDateKey(new Date());
   const [currentMonth, setCurrentMonth] = useState(() => getMonthStart(new Date()));
   const [selectedDate, setSelectedDate] = useState(todayKey);
-  const [adminCode, setAdminCode] = useState("");
-  const [loginStatus, setLoginStatus] = useState(null);
   const [formStatus, setFormStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMode, setFormMode] = useState("create");
@@ -87,58 +82,6 @@ function Schedule() {
       endTime: "",
       description: "",
     });
-  };
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    setLoginStatus(null);
-    setIsSubmitting(true);
-
-    try {
-      await loginScheduleAdmin(adminCode);
-      setIsAdmin(true);
-      setAdminCode("");
-      setLoginStatus({
-        type: "success",
-        text: "관리자 모드가 활성화되었습니다.",
-      });
-      await reload();
-    } catch (loginError) {
-      setLoginStatus({
-        type: "error",
-        text:
-          loginError instanceof Error
-            ? loginError.message
-            : "관리자 로그인에 실패했습니다.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    setIsSubmitting(true);
-
-    try {
-      await logoutScheduleAdmin();
-      setIsAdmin(false);
-      setLoginStatus({
-        type: "success",
-        text: "관리자 로그아웃이 완료되었습니다.",
-      });
-      setFormStatus(null);
-      resetForm();
-    } catch (logoutError) {
-      setLoginStatus({
-        type: "error",
-        text:
-          logoutError instanceof Error
-            ? logoutError.message
-            : "로그아웃에 실패했습니다.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleSave = async (event) => {
@@ -465,52 +408,17 @@ function Schedule() {
 
             <div className="schedule-panel">
               <div className="schedule-panel-head">
-                <h3>{isAdmin ? "관리자 일정 편집" : "관리자 코드 로그인"}</h3>
-                {isAdmin ? <span>수정 가능</span> : <span>읽기 전용</span>}
+                <h3>일정 편집</h3>
+                {isAdmin ? <span>수정 가능</span> : <span>관리자 전용</span>}
               </div>
 
               {!isAdmin ? (
-                <form className="schedule-admin-form" onSubmit={handleLogin}>
-                  <label className="guestbook-label" htmlFor="schedule-admin-code">
-                    관리자 코드
-                  </label>
-                  <input
-                    id="schedule-admin-code"
-                    type="password"
-                    placeholder="관리자 코드 입력"
-                    value={adminCode}
-                    onChange={(event) => {
-                      setAdminCode(event.target.value);
-                      if (loginStatus) {
-                        setLoginStatus(null);
-                      }
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    className="btn btn-dark"
-                    disabled={!adminCode.trim() || isSubmitting || !!error}
-                  >
-                    {isSubmitting ? "로그인 중..." : "관리자 로그인"}
-                  </button>
-
-                  {loginStatus ? (
-                    <p className={`guestbook-status is-${loginStatus.type}`}>
-                      {loginStatus.text}
-                    </p>
-                  ) : null}
-                </form>
+                <div className="guestbook-empty schedule-admin-empty">
+                  상단 메뉴 아래의 관리자 로그인 바에서 로그인하면 이곳에서 일정을
+                  수정할 수 있습니다.
+                </div>
               ) : (
                 <div className="schedule-admin-area">
-                  <button
-                    type="button"
-                    className="btn btn-light"
-                    onClick={handleLogout}
-                    disabled={isSubmitting}
-                  >
-                    관리자 로그아웃
-                  </button>
-
                   <form className="schedule-admin-form" onSubmit={handleSave}>
                     <label className="guestbook-label" htmlFor="schedule-title">
                       일정 제목

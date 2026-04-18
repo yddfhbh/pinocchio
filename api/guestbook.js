@@ -4,6 +4,7 @@ import {
   GUESTBOOK_MESSAGE_LIMIT,
   GUESTBOOK_NICKNAME_LIMIT,
 } from "../src/lib/guestbook.js";
+import { isAdminRequest } from "./_auth.js";
 import { ensureGuestbookTable, query } from "./_db.js";
 
 function toEntry(row) {
@@ -107,7 +108,52 @@ export default async function handler(request, response) {
     }
   }
 
-  response.setHeader("Allow", "GET, POST");
+  if (request.method === "DELETE") {
+    if (!isAdminRequest(request)) {
+      return sendJson(response, 401, {
+        error: "관리자만 방명록을 삭제할 수 있습니다.",
+      });
+    }
+
+    try {
+      const body = await readBody(request);
+      const id = Number.parseInt(String(body?.id ?? ""), 10);
+
+      if (!Number.isFinite(id)) {
+        return sendJson(response, 400, {
+          error: "삭제할 방명록을 선택해주세요.",
+        });
+      }
+
+      await ensureGuestbookTable();
+
+      const result = await query(
+        `DELETE FROM guestbook_entries
+         WHERE id = $1
+         RETURNING id`,
+        [id]
+      );
+
+      if (!result.rows.length) {
+        return sendJson(response, 404, {
+          error: "삭제할 방명록을 찾지 못했습니다.",
+        });
+      }
+
+      return sendJson(response, 200, {
+        deletedId: String(result.rows[0].id),
+      });
+    } catch (error) {
+      return sendJson(response, 500, {
+        error:
+          error instanceof Error
+            ? error.message
+            : "방명록을 삭제하지 못했습니다.",
+      });
+    }
+  }
+
+  response.setHeader("Allow", "GET, POST, DELETE");
   return sendJson(response, 405, {
     error: "허용되지 않은 요청 방식입니다.",
   });

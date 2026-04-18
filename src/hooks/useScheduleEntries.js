@@ -10,7 +10,6 @@ function getFallbackEntries(limit) {
 
 function useScheduleEntries(limit) {
   const [entries, setEntries] = useState(() => getFallbackEntries(limit));
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,11 +19,9 @@ function useScheduleEntries(limit) {
     try {
       const result = await fetchScheduleEntries(limit);
       setEntries(result.entries);
-      setIsAdmin(result.isAdmin);
       setError("");
     } catch (loadError) {
       setEntries(getFallbackEntries(limit));
-      setIsAdmin(false);
       setError(
         loadError instanceof Error ? loadError.message : "일정을 불러오지 못했습니다."
       );
@@ -47,7 +44,6 @@ function useScheduleEntries(limit) {
         }
 
         setEntries(result.entries);
-        setIsAdmin(result.isAdmin);
         setError("");
       } catch (loadError) {
         if (cancelled) {
@@ -55,7 +51,6 @@ function useScheduleEntries(limit) {
         }
 
         setEntries(getFallbackEntries(limit));
-        setIsAdmin(false);
         setError(
           loadError instanceof Error
             ? loadError.message
@@ -78,8 +73,6 @@ function useScheduleEntries(limit) {
   return {
     entries,
     setEntries,
-    isAdmin,
-    setIsAdmin,
     isLoading,
     error,
     reload,

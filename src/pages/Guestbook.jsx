@@ -1,6 +1,7 @@
 import { useState } from "react";
 import useGuestbookEntries from "../hooks/useGuestbookEntries";
 import {
+  deleteGuestbookEntry,
   formatGuestbookDate,
   GUESTBOOK_ENTRY_LIMIT,
   GUESTBOOK_MESSAGE_LIMIT,
@@ -9,13 +10,14 @@ import {
   postGuestbookEntry,
 } from "../lib/guestbook";
 
-function Guestbook() {
+function Guestbook({ isAdmin }) {
   const { entries, error, isLoading, setEntries } =
     useGuestbookEntries(GUESTBOOK_ENTRY_LIMIT);
   const [nickname, setNickname] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
 
   const remainingCount = GUESTBOOK_MESSAGE_LIMIT - message.length;
 
@@ -59,6 +61,36 @@ function Guestbook() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (entry) => {
+    if (!window.confirm("이 방명록 메시지를 삭제할까요?")) {
+      return;
+    }
+
+    setDeletingId(entry.id);
+    setStatus(null);
+
+    try {
+      await deleteGuestbookEntry(entry.id);
+      setEntries((currentEntries) =>
+        currentEntries.filter((currentEntry) => currentEntry.id !== entry.id)
+      );
+      setStatus({
+        type: "success",
+        text: "방명록이 삭제되었습니다.",
+      });
+    } catch (deleteError) {
+      setStatus({
+        type: "error",
+        text:
+          deleteError instanceof Error
+            ? deleteError.message
+            : "방명록을 삭제하지 못했습니다.",
+      });
+    } finally {
+      setDeletingId("");
     }
   };
 
@@ -152,8 +184,20 @@ function Guestbook() {
               entries.map((entry) => (
                 <article className="guestbook-item" key={entry.id}>
                   <div className="guestbook-item-head">
-                    <strong>{getGuestbookDisplayName(entry.nickname)}</strong>
-                    <span>{formatGuestbookDate(entry.createdAt)}</span>
+                    <div className="guestbook-item-meta">
+                      <strong>{getGuestbookDisplayName(entry.nickname)}</strong>
+                      <span>{formatGuestbookDate(entry.createdAt)}</span>
+                    </div>
+                    {isAdmin ? (
+                      <button
+                        type="button"
+                        className="btn btn-light guestbook-delete-button"
+                        onClick={() => handleDelete(entry)}
+                        disabled={!!error || deletingId === entry.id}
+                      >
+                        {deletingId === entry.id ? "삭제 중..." : "삭제"}
+                      </button>
+                    ) : null}
                   </div>
                   <p>{entry.message}</p>
                 </article>

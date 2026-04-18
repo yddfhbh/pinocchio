@@ -117,6 +117,34 @@ export async function postGuestbookEntry({ message, nickname }) {
   return normalizeGuestbookEntries([payload.entry])[0];
 }
 
+export async function deleteGuestbookEntry(id) {
+  const response = await fetch("/api/guestbook", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = "방명록을 삭제하지 못했습니다.";
+
+    try {
+      const payload = await response.json();
+
+      if (payload?.error) {
+        errorMessage = payload.error;
+      }
+    } catch {
+      // Ignore malformed error payloads and use the default message.
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return response.json().catch(() => ({}));
+}
+
 export function formatGuestbookDate(createdAt) {
   const date = new Date(createdAt);
 

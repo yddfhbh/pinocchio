@@ -58,6 +58,81 @@ a {
   font-weight: 600;
 }
 
+.admin-strip {
+  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.admin-strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 10px 0;
+}
+
+.admin-strip-copy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin-strip-copy strong {
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.admin-strip-form,
+.admin-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-strip-form input {
+  width: 180px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.admin-strip-form input:focus {
+  outline: 2px solid #c7d2fe;
+  outline-offset: 2px;
+  border-color: #93c5fd;
+}
+
+.admin-strip-button {
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.admin-strip-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-strip-status {
+  margin: 0;
+  padding-bottom: 10px;
+}
+
 .hero {
   padding: 24px 0 24px;
   background: linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
@@ -314,12 +389,23 @@ a {
   margin-bottom: 14px;
 }
 
+.guestbook-item-meta {
+  display: grid;
+  gap: 4px;
+}
+
 .guestbook-item-head strong {
   font-size: 16px;
 }
 
 .guestbook-item-head span {
   color: #6b7280;
+  font-size: 14px;
+}
+
+.guestbook-delete-button {
+  padding: 10px 14px;
+  border-radius: 12px;
   font-size: 14px;
 }
 
@@ -409,8 +495,8 @@ a {
 }
 
 .schedule-day {
-  min-height: 152px;
-  padding: 12px;
+  min-height: 126px;
+  padding: 10px;
   border: 1px solid #e5e7eb;
   border-radius: 18px;
   background: #fff;
@@ -418,7 +504,7 @@ a {
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   overflow: hidden;
 }
 
@@ -586,6 +672,10 @@ a {
   gap: 16px;
 }
 
+.schedule-admin-empty {
+  margin: 0;
+}
+
 .schedule-admin-form {
   display: grid;
   gap: 0;
@@ -726,6 +816,12 @@ a {
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+
+  .admin-strip-inner,
+  .admin-strip-copy {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 640px) {
@@ -737,6 +833,14 @@ a {
 
   .logo {
     font-size: 28px;
+  }
+
+  .admin-strip-form {
+    width: 100%;
+  }
+
+  .admin-strip-form input {
+    width: 100%;
   }
 
   .hero {
@@ -1059,7 +1163,7 @@ a {
   }
 
   .schedule-day {
-    min-height: 118px;
+    min-height: 98px;
     padding: 8px;
   }
 
