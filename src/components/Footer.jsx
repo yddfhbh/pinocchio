@@ -1,9 +1,9 @@
 function Footer() {
   return (
     <footer className="footer">
-      <div className="container">
-        <p className="footer-title">pusanpino</p>
-        <p>© 2026 pusanpino. All rights reserved.</p>
+      <div className="container footer-inner">
+        <p>© 2026 PINOCCHIO. All rights reserved.</p>
+        <p>동아리 기록과 공연을 담는 공간</p>
       </div>
     </footer>
   );

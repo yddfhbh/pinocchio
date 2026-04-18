@@ -3,7 +3,10 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
-import Contact from "./pages/Contact";
+import Scores from "./pages/Scores";
+import Videos from "./pages/Videos";
+import Schedule from "./pages/Schedule";
+import Guestbook from "./pages/Guestbook";
 import "./App.css";
 
 function App() {
@@ -14,7 +17,10 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/scores" element={<Scores />} />
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/guestbook" element={<Guestbook />} />
         </Routes>
       </main>
       <Footer />

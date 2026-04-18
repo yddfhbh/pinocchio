@@ -4,9 +4,9 @@
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  color: #18181b;
-  background: #ffffff;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  background-color: #f7f8fb;
+  color: #1f2328;
 }
 
 a {
@@ -15,8 +15,8 @@ a {
 }
 
 .site-wrapper {
-  display: flex;
   min-height: 100vh;
+  display: flex;
   flex-direction: column;
 }
 
@@ -30,219 +30,246 @@ a {
 }
 
 .header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid #e4e4e7;
-  backdrop-filter: blur(8px);
+}
+
+.header-inner {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .nav {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 0;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.menu {
-  display: flex;
-  gap: 20px;
-  font-size: 15px;
-}
-
-.menu a:hover {
-  color: #2563eb;
+  gap: 24px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .hero {
   padding: 100px 0 80px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
 }
 
 .badge {
   display: inline-block;
-  padding: 8px 14px;
+  padding: 12px 18px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 14px;
-  font-weight: 600;
+  background: #e9f1ff;
+  color: #2156d9;
+  font-weight: 700;
+  margin-bottom: 28px;
 }
 
 .hero h1 {
-  margin-top: 24px;
-  font-size: 52px;
+  font-size: 64px;
   line-height: 1.15;
+  margin: 0 0 24px;
+  letter-spacing: -0.04em;
 }
 
 .hero-text {
-  margin-top: 24px;
-  max-width: 700px;
-  font-size: 18px;
-  line-height: 1.7;
-  color: #52525b;
+  font-size: 22px;
+  line-height: 1.8;
+  color: #4b5563;
+  max-width: 760px;
+  margin-bottom: 36px;
 }
 
 .hero-buttons {
   display: flex;
-  gap: 14px;
-  margin-top: 36px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .btn {
-  display: inline-block;
-  padding: 14px 22px;
-  border-radius: 14px;
-  font-weight: 600;
-  transition: 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 28px;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  border: 1px solid #d1d5db;
 }
 
 .btn-dark {
-  background: #18181b;
+  background: #111827;
   color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-dark:hover {
-  background: #3f3f46;
+  border-color: #111827;
 }
 
 .btn-light {
-  border: 1px solid #d4d4d8;
   background: white;
-}
-
-.btn-light:hover {
-  background: #f4f4f5;
-}
-
-.btn-white {
-  background: white;
-  color: #18181b;
+  color: #111827;
 }
 
 .features {
-  padding: 70px 0;
-  background: #f8fafc;
-  border-top: 1px solid #e4e4e7;
+  padding: 40px 0 80px;
 }
 
-.card-grid,
-.about-grid {
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.about-grid {
   grid-template-columns: repeat(2, 1fr);
-  margin-top: 30px;
+  gap: 24px;
 }
 
 .card {
   background: white;
-  border: 1px solid #e4e4e7;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  padding: 32px;
+  min-height: 180px;
+}
+
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 28px;
 }
 
 .card p {
-  color: #52525b;
+  margin: 0;
+  color: #4b5563;
   line-height: 1.7;
+  font-size: 17px;
 }
 
-.cta {
-  padding: 70px 0;
-}
-
-.cta-box {
-  background: #18181b;
-  color: white;
-  border-radius: 28px;
-  padding: 50px 36px;
-}
-
-.cta-box p {
-  color: #d4d4d8;
-  max-width: 700px;
-  line-height: 1.7;
-}
-
-.page {
+.page-section {
   padding: 80px 0;
 }
 
-.page h1 {
-  font-size: 42px;
-  margin-bottom: 18px;
+.page-section h2 {
+  font-size: 44px;
+  margin: 0 0 20px;
 }
 
-.page-desc {
-  color: #52525b;
-  font-size: 18px;
-  line-height: 1.7;
-  max-width: 760px;
+.page-description {
+  font-size: 20px;
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 32px;
 }
 
-.contact-form {
-  margin-top: 32px;
-  border: 1px solid #e4e4e7;
+.info-box,
+.list-card,
+.schedule-box,
+.guestbook-form,
+.guestbook-item {
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
+  padding: 24px;
   margin-bottom: 20px;
 }
 
-.form-group label {
-  margin-bottom: 8px;
-  font-weight: 600;
+.info-box h3,
+.list-card h3 {
+  margin-top: 0;
 }
 
-.form-group input,
-.form-group textarea {
-  border: 1px solid #d4d4d8;
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 15px;
+.info-box ul,
+.schedule-box ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+  color: #4b5563;
+  line-height: 1.8;
+}
+
+.card-list {
+  display: grid;
+  gap: 20px;
+}
+
+.guestbook-form textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+
+.guestbook-list {
+  margin-top: 24px;
 }
 
 .footer {
-  border-top: 1px solid #e4e4e7;
-  background: #fafafa;
-  padding: 30px 0;
-  color: #52525b;
+  background: #111827;
+  color: white;
+  margin-top: 40px;
 }
 
-.footer-title {
-  font-weight: 700;
-  color: #18181b;
+.footer-inner {
+  padding: 28px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .hero h1 {
+    font-size: 48px;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    gap: 14px;
+    font-size: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 0;
+  }
+
+  .logo {
+    font-size: 28px;
+  }
+
+  .hero {
+    padding: 72px 0 56px;
+  }
+
   .hero h1 {
     font-size: 36px;
   }
 
-  .card-grid,
-  .about-grid {
-    grid-template-columns: 1fr;
+  .hero-text {
+    font-size: 18px;
   }
 
-  .menu {
-    gap: 14px;
-    font-size: 14px;
+  .page-section h2 {
+    font-size: 32px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
   }
 }

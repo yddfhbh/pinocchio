@@ -2,61 +2,67 @@ import { Link } from "react-router-dom";
 
 function Home() {
   return (
-    <>
-      <section className="hero container">
-        <p className="badge">Welcome to pusanpino</p>
-        <h1>
-          깔끔하고 신뢰감 있는 웹사이트를 위한
-          <br />
-          첫 시작 페이지
-        </h1>
-        <p className="hero-text">
-          브랜드 소개, 서비스 안내, 문의 유도까지 한 번에 담는
-          심플한 랜딩 페이지입니다.
-        </p>
+    <div>
+      <section className="hero">
+        <div className="container">
+          <span className="badge">Welcome to PINOCCHIO</span>
+          <h1>
+            우리의 연주와 기록이
+            <br />
+            머무는 동아리 홈페이지
+          </h1>
+          <p className="hero-text">
+            악보 보관, 공연 영상 모음, 동아리 일정 관리,
+            그리고 익명 방명록까지 한곳에서 확인할 수 있습니다.
+          </p>
 
-        <div className="hero-buttons">
-          <Link to="/contact" className="btn btn-dark">
-            문의하기
-          </Link>
-          <Link to="/about" className="btn btn-light">
-            더 알아보기
-          </Link>
+          <div className="hero-buttons">
+            <Link to="/about" className="btn btn-dark">
+              동아리 소개 보기
+            </Link>
+            <Link to="/guestbook" className="btn btn-light">
+              방명록 가기
+            </Link>
+          </div>
         </div>
       </section>
 
       <section className="features">
         <div className="container card-grid">
           <div className="card">
-            <h2>브랜드 소개</h2>
-            <p>핵심 메시지를 빠르게 전달할 수 있는 소개 섹션입니다.</p>
+            <h3>악보실</h3>
+            <p>
+              연습용 악보와 합주 자료를 체계적으로 정리하고
+              보관할 수 있는 공간입니다.
+            </p>
           </div>
 
           <div className="card">
-            <h2>서비스 안내</h2>
-            <p>제공하는 서비스와 작업 내용을 보기 좋게 정리합니다.</p>
+            <h3>공연 영상</h3>
+            <p>
+              유튜브에 업로드된 공연 영상을 모아
+              한눈에 볼 수 있도록 전시합니다.
+            </p>
           </div>
 
           <div className="card">
-            <h2>문의 유도</h2>
-            <p>방문자가 자연스럽게 상담이나 문의를 남길 수 있게 합니다.</p>
+            <h3>동아리 일정</h3>
+            <p>
+              연습, 공연, 회의 일정을 확인하고
+              앞으로의 계획을 함께 공유합니다.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>익명 방명록</h3>
+            <p>
+              자유롭게 응원과 감상을 남길 수 있는
+              익명 메시지 공간입니다.
+            </p>
           </div>
         </div>
       </section>
-
-      <section className="cta container">
-        <div className="cta-box">
-          <h2>필요한 기능은 이제부터 붙이면 됩니다</h2>
-          <p>
-            문의 폼 저장, 관리자 페이지, 로그인, 게시판, DB 연결까지
-            이 기본 구조 위에 확장할 수 있습니다.
-          </p>
-          <Link to="/contact" className="btn btn-white">
-            시작하기
-          </Link>
-        </div>
-      </section>
-    </>
+    </div>
   );
 }
 
