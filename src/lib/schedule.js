@@ -219,3 +219,31 @@ export function getCalendarDays(monthDate, entries) {
     };
   });
 }
+
+export function getMonthWeekdayDates(dateString, weekdays) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString) || !Array.isArray(weekdays)) {
+    return [];
+  }
+
+  const selectedWeekdays = new Set(
+    weekdays.filter((weekday) => Number.isInteger(weekday) && weekday >= 0 && weekday <= 6)
+  );
+
+  if (!selectedWeekdays.size) {
+    return [];
+  }
+
+  const baseDate = new Date(`${dateString}T00:00:00`);
+  const cursor = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+  const dates = [];
+
+  while (cursor.getMonth() === baseDate.getMonth()) {
+    if (selectedWeekdays.has(cursor.getDay())) {
+      dates.push(toDateKey(cursor));
+    }
+
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
+}

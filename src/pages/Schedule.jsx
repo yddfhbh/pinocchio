@@ -8,6 +8,7 @@ import {
   formatScheduleTime,
   getCalendarDays,
   getCategoryLabel,
+  getMonthWeekdayDates,
   getMonthStart,
   loginScheduleAdmin,
   logoutScheduleAdmin,
@@ -17,6 +18,7 @@ import {
 } from "../lib/schedule";
 
 const weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+const defaultCategory = "연습";
 
 function Schedule() {
   const { entries, setEntries, isAdmin, setIsAdmin, isLoading, error, reload } =
@@ -29,10 +31,12 @@ function Schedule() {
   const [formStatus, setFormStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMode, setFormMode] = useState("create");
+  const [repeatMode, setRepeatMode] = useState("single");
+  const [repeatWeekdays, setRepeatWeekdays] = useState([]);
   const [formValues, setFormValues] = useState({
     id: "",
     title: "",
-    category: "연습",
+    category: defaultCategory,
     eventDate: todayKey,
     startTime: "",
     endTime: "",
@@ -49,12 +53,35 @@ function Schedule() {
     [entries, selectedDate]
   );
 
+  const repeatDates = useMemo(() => {
+    if (formMode !== "create" || repeatMode !== "monthly") {
+      return [];
+    }
+
+    return getMonthWeekdayDates(formValues.eventDate, repeatWeekdays);
+  }, [formMode, formValues.eventDate, repeatMode, repeatWeekdays]);
+
+  const repeatMonthLabel = useMemo(() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(formValues.eventDate)) {
+      return "";
+    }
+
+    return formatMonthLabel(new Date(`${formValues.eventDate}T00:00:00`));
+  }, [formValues.eventDate]);
+
+  const repeatWeekdayText = useMemo(
+    () => repeatWeekdays.map((weekday) => `${weekdayLabels[weekday]}요일`).join(", "),
+    [repeatWeekdays]
+  );
+
   const resetForm = (date = selectedDate) => {
     setFormMode("create");
+    setRepeatMode("single");
+    setRepeatWeekdays([]);
     setFormValues({
       id: "",
       title: "",
-      category: "연습",
+      category: defaultCategory,
       eventDate: date,
       startTime: "",
       endTime: "",
@@ -117,9 +144,80 @@ function Schedule() {
   const handleSave = async (event) => {
     event.preventDefault();
     setFormStatus(null);
+    const isMonthlyRepeat = formMode === "create" && repeatMode === "monthly";
+
+    if (isMonthlyRepeat) {
+      if (!repeatDates.length) {
+        setFormStatus({
+          type: "error",
+          text: "반복 등록할 요일을 한 개 이상 선택해주세요.",
+        });
+        return;
+      }
+
+      const shouldContinue = window.confirm(
+        `${repeatMonthLabel}에 ${repeatWeekdayText} 일정 ${repeatDates.length}개를 한 번에 등록할까요?`
+      );
+
+      if (!shouldContinue) {
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
+      if (isMonthlyRepeat) {
+        const createdEntries = [];
+
+        try {
+          for (const eventDate of repeatDates) {
+            const entry = await saveScheduleEntry(
+              {
+                ...formValues,
+                eventDate,
+              },
+              "create"
+            );
+
+            createdEntries.push(entry);
+          }
+        } catch (batchError) {
+          if (createdEntries.length) {
+            setEntries((currentEntries) =>
+              normalizeScheduleEntries([...currentEntries, ...createdEntries])
+            );
+          }
+
+          throw new Error(
+            createdEntries.length
+              ? `일부 일정만 등록되었습니다. ${createdEntries.length}개를 저장한 뒤 중단되었습니다. ${
+                  batchError instanceof Error
+                    ? batchError.message
+                    : "나머지 일정을 등록하지 못했습니다."
+                }`
+              : batchError instanceof Error
+                ? batchError.message
+                : "일정을 저장하지 못했습니다."
+          );
+        }
+
+        const focusDate = createdEntries[0]?.eventDate || formValues.eventDate;
+
+        setEntries((currentEntries) =>
+          normalizeScheduleEntries([...currentEntries, ...createdEntries])
+        );
+        setSelectedDate(focusDate);
+        setCurrentMonth(getMonthStart(new Date(`${focusDate}T00:00:00`)));
+        resetForm(focusDate);
+        setFormStatus({
+          type: "success",
+          text: `${repeatMonthLabel} ${repeatWeekdayText} 일정 ${createdEntries.length}개를 등록했습니다.`,
+        });
+
+        return;
+      }
+
       const entry = await saveScheduleEntry(formValues, formMode);
 
       setEntries((currentEntries) => {
@@ -133,6 +231,7 @@ function Schedule() {
         return normalizeScheduleEntries(nextEntries);
       });
       setSelectedDate(entry.eventDate);
+      setCurrentMonth(getMonthStart(new Date(`${entry.eventDate}T00:00:00`)));
       resetForm(entry.eventDate);
       setFormStatus({
         type: "success",
@@ -156,10 +255,12 @@ function Schedule() {
 
   const handleEdit = (entry) => {
     setFormMode("edit");
+    setRepeatMode("single");
+    setRepeatWeekdays([]);
     setFormValues({
       id: entry.id,
       title: entry.title,
-      category: entry.category || "연습",
+      category: entry.category || defaultCategory,
       eventDate: entry.eventDate,
       startTime: entry.startTime || "",
       endTime: entry.endTime || "",
@@ -201,6 +302,29 @@ function Schedule() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleRepeatToggle = (checked) => {
+    if (!checked) {
+      setRepeatMode("single");
+      setRepeatWeekdays([]);
+      return;
+    }
+
+    const defaultWeekday = new Date(`${formValues.eventDate}T00:00:00`).getDay();
+
+    setRepeatMode("monthly");
+    setRepeatWeekdays((currentWeekdays) =>
+      currentWeekdays.length ? currentWeekdays : [defaultWeekday]
+    );
+  };
+
+  const handleRepeatWeekdayChange = (weekday) => {
+    setRepeatWeekdays((currentWeekdays) =>
+      currentWeekdays.includes(weekday)
+        ? currentWeekdays.filter((currentWeekday) => currentWeekday !== weekday)
+        : [...currentWeekdays, weekday].sort((left, right) => left - right)
+    );
   };
 
   return (
@@ -264,15 +388,23 @@ function Schedule() {
                       }
                     }}
                   >
-                    <span className="schedule-day-label">{day.label}</span>
+                    <div className="schedule-day-top">
+                      <span className="schedule-day-label">{day.label}</span>
+                      {day.entries.length ? (
+                        <span className="schedule-day-count">{day.entries.length}</span>
+                      ) : null}
+                    </div>
                     <div className="schedule-day-events">
-                      {day.entries.slice(0, 2).map((entry) => (
-                        <span key={entry.id} className="schedule-dot">
-                          {entry.title}
+                      {day.entries.slice(0, 3).map((entry) => (
+                        <span key={entry.id} className="schedule-day-chip" title={entry.title}>
+                          {entry.startTime ? (
+                            <span className="schedule-day-chip-time">{entry.startTime}</span>
+                          ) : null}
+                          <span className="schedule-day-chip-title">{entry.title}</span>
                         </span>
                       ))}
-                      {day.entries.length > 2 ? (
-                        <span className="schedule-more">+{day.entries.length - 2}</span>
+                      {day.entries.length > 3 ? (
+                        <span className="schedule-more">+{day.entries.length - 3}개 더 보기</span>
                       ) : null}
                     </div>
                   </button>
@@ -421,7 +553,9 @@ function Schedule() {
 
                       <div>
                         <label className="guestbook-label" htmlFor="schedule-date">
-                          날짜
+                          {repeatMode === "monthly" && formMode === "create"
+                            ? "기준 날짜"
+                            : "날짜"}
                         </label>
                         <input
                           id="schedule-date"
@@ -434,6 +568,11 @@ function Schedule() {
                             }))
                           }
                         />
+                        {repeatMode === "monthly" && formMode === "create" ? (
+                          <p className="schedule-field-hint">
+                            선택한 날짜가 포함된 달 전체를 기준으로 반복 일정을 만듭니다.
+                          </p>
+                        ) : null}
                       </div>
                     </div>
 
@@ -488,6 +627,58 @@ function Schedule() {
                         }))
                       }
                     ></textarea>
+
+                    {formMode === "create" ? (
+                      <div className="schedule-repeat-card">
+                        <label className="schedule-repeat-toggle" htmlFor="schedule-repeat-monthly">
+                          <input
+                            id="schedule-repeat-monthly"
+                            type="checkbox"
+                            checked={repeatMode === "monthly"}
+                            onChange={(event) => handleRepeatToggle(event.target.checked)}
+                          />
+                          <span>
+                            <strong>선택한 요일로 한 달치 반복 일정 만들기</strong>
+                            <small>
+                              같은 제목과 시간으로 {repeatMonthLabel || "해당 월"} 일정을
+                              한 번에 등록합니다.
+                            </small>
+                          </span>
+                        </label>
+
+                        {repeatMode === "monthly" ? (
+                          <>
+                            <div className="schedule-repeat-weekdays">
+                              {weekdayLabels.map((label, index) => {
+                                const isChecked = repeatWeekdays.includes(index);
+
+                                return (
+                                  <label
+                                    key={label}
+                                    className={`schedule-repeat-day${
+                                      isChecked ? " is-selected" : ""
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => handleRepeatWeekdayChange(index)}
+                                    />
+                                    <span>{label}요일</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+
+                            <p className="schedule-repeat-summary">
+                              {repeatDates.length
+                                ? `${repeatMonthLabel}에 ${repeatWeekdayText} 일정 ${repeatDates.length}개가 생성됩니다.`
+                                : "반복 등록할 요일을 선택해주세요."}
+                            </p>
+                          </>
+                        ) : null}
+                      </div>
+                    ) : null}
 
                     <div className="schedule-form-actions">
                       <button
