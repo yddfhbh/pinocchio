@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ConfirmDialog } from "../components/Dialog";
 import useScheduleEntries from "../hooks/useScheduleEntries";
 import {
   addMonths,
@@ -28,6 +29,8 @@ function Schedule({ isAdmin }) {
   const [formMode, setFormMode] = useState("create");
   const [repeatMode, setRepeatMode] = useState("single");
   const [repeatWeekdays, setRepeatWeekdays] = useState([]);
+  const [isRepeatConfirmOpen, setIsRepeatConfirmOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState(null);
   const [formValues, setFormValues] = useState({
     id: "",
     title: "",
@@ -84,83 +87,74 @@ function Schedule({ isAdmin }) {
     });
   };
 
-  const handleSave = async (event) => {
-    event.preventDefault();
-    setFormStatus(null);
-    const isMonthlyRepeat = formMode === "create" && repeatMode === "monthly";
-
-    if (isMonthlyRepeat) {
-      if (!repeatDates.length) {
-        setFormStatus({
-          type: "error",
-          text: "반복 등록할 요일을 한 개 이상 선택해주세요.",
-        });
-        return;
-      }
-
-      const shouldContinue = window.confirm(
-        `${repeatMonthLabel}에 ${repeatWeekdayText} 일정 ${repeatDates.length}개를 한 번에 등록할까요?`
-      );
-
-      if (!shouldContinue) {
-        return;
-      }
-    }
-
+  const saveMonthlyRepeatEntries = async () => {
     setIsSubmitting(true);
 
     try {
-      if (isMonthlyRepeat) {
-        const createdEntries = [];
+      const createdEntries = [];
 
-        try {
-          for (const eventDate of repeatDates) {
-            const entry = await saveScheduleEntry(
-              {
-                ...formValues,
-                eventDate,
-              },
-              "create"
-            );
+      try {
+        for (const eventDate of repeatDates) {
+          const entry = await saveScheduleEntry(
+            {
+              ...formValues,
+              eventDate,
+            },
+            "create"
+          );
 
-            createdEntries.push(entry);
-          }
-        } catch (batchError) {
-          if (createdEntries.length) {
-            setEntries((currentEntries) =>
-              normalizeScheduleEntries([...currentEntries, ...createdEntries])
-            );
-          }
-
-          throw new Error(
-            createdEntries.length
-              ? `일부 일정만 등록되었습니다. ${createdEntries.length}개를 저장한 뒤 중단되었습니다. ${
-                  batchError instanceof Error
-                    ? batchError.message
-                    : "나머지 일정을 등록하지 못했습니다."
-                }`
-              : batchError instanceof Error
-                ? batchError.message
-                : "일정을 저장하지 못했습니다."
+          createdEntries.push(entry);
+        }
+      } catch (batchError) {
+        if (createdEntries.length) {
+          setEntries((currentEntries) =>
+            normalizeScheduleEntries([...currentEntries, ...createdEntries])
           );
         }
 
-        const focusDate = createdEntries[0]?.eventDate || formValues.eventDate;
-
-        setEntries((currentEntries) =>
-          normalizeScheduleEntries([...currentEntries, ...createdEntries])
+        throw new Error(
+          createdEntries.length
+            ? `일부 일정만 등록되었습니다. ${createdEntries.length}개를 저장한 뒤 중단되었습니다. ${
+                batchError instanceof Error
+                  ? batchError.message
+                  : "나머지 일정을 등록하지 못했습니다."
+              }`
+            : batchError instanceof Error
+              ? batchError.message
+              : "일정을 저장하지 못했습니다."
         );
-        setSelectedDate(focusDate);
-        setCurrentMonth(getMonthStart(new Date(`${focusDate}T00:00:00`)));
-        resetForm(focusDate);
-        setFormStatus({
-          type: "success",
-          text: `${repeatMonthLabel} ${repeatWeekdayText} 일정 ${createdEntries.length}개를 등록했습니다.`,
-        });
-
-        return;
       }
 
+      const focusDate = createdEntries[0]?.eventDate || formValues.eventDate;
+
+      setEntries((currentEntries) =>
+        normalizeScheduleEntries([...currentEntries, ...createdEntries])
+      );
+      setSelectedDate(focusDate);
+      setCurrentMonth(getMonthStart(new Date(`${focusDate}T00:00:00`)));
+      resetForm(focusDate);
+      setFormStatus({
+        type: "success",
+        text: `${repeatMonthLabel} ${repeatWeekdayText} 일정 ${createdEntries.length}개를 등록했습니다.`,
+      });
+    } catch (saveError) {
+      setFormStatus({
+        type: "error",
+        text:
+          saveError instanceof Error
+            ? saveError.message
+            : "일정을 저장하지 못했습니다.",
+      });
+    } finally {
+      setIsSubmitting(false);
+      setIsRepeatConfirmOpen(false);
+    }
+  };
+
+  const saveSingleEntry = async () => {
+    setIsSubmitting(true);
+
+    try {
       const entry = await saveScheduleEntry(formValues, formMode);
 
       setEntries((currentEntries) => {
@@ -196,6 +190,27 @@ function Schedule({ isAdmin }) {
     }
   };
 
+  const handleSave = async (event) => {
+    event.preventDefault();
+    setFormStatus(null);
+    const isMonthlyRepeat = formMode === "create" && repeatMode === "monthly";
+
+    if (isMonthlyRepeat) {
+      if (!repeatDates.length) {
+        setFormStatus({
+          type: "error",
+          text: "반복 등록할 요일을 한 개 이상 선택해주세요.",
+        });
+        return;
+      }
+
+      setIsRepeatConfirmOpen(true);
+      return;
+    }
+
+    await saveSingleEntry();
+  };
+
   const handleEdit = (entry) => {
     setFormMode("edit");
     setRepeatMode("single");
@@ -213,8 +228,8 @@ function Schedule({ isAdmin }) {
     setFormStatus(null);
   };
 
-  const handleDelete = async (entry) => {
-    if (!window.confirm(`"${entry.title}" 일정을 삭제할까요?`)) {
+  const handleDelete = async () => {
+    if (!entryToDelete) {
       return;
     }
 
@@ -222,17 +237,17 @@ function Schedule({ isAdmin }) {
     setIsSubmitting(true);
 
     try {
-      await deleteScheduleEntry(entry.id);
+      await deleteScheduleEntry(entryToDelete.id);
       setEntries((currentEntries) =>
-        currentEntries.filter((currentEntry) => currentEntry.id !== entry.id)
+        currentEntries.filter((currentEntry) => currentEntry.id !== entryToDelete.id)
       );
       setFormStatus({
         type: "success",
         text: "일정이 삭제되었습니다.",
       });
 
-      if (formValues.id === entry.id) {
-        resetForm(entry.eventDate);
+      if (formValues.id === entryToDelete.id) {
+        resetForm(entryToDelete.eventDate);
       }
     } catch (deleteError) {
       setFormStatus({
@@ -244,6 +259,7 @@ function Schedule({ isAdmin }) {
       });
     } finally {
       setIsSubmitting(false);
+      setEntryToDelete(null);
     }
   };
 
@@ -387,7 +403,7 @@ function Schedule({ isAdmin }) {
                           <button
                             type="button"
                             className="btn btn-light schedule-action-button"
-                            onClick={() => handleDelete(entry)}
+                            onClick={() => setEntryToDelete(entry)}
                           >
                             삭제
                           </button>
@@ -411,8 +427,8 @@ function Schedule({ isAdmin }) {
 
               {!isAdmin ? (
                 <div className="guestbook-empty schedule-admin-empty">
-                  상단 메뉴 아래의 관리자 로그인 바에서 로그인하면 이곳에서 일정을
-                  수정할 수 있습니다.
+                  헤더의 방명록 옆 관리자 버튼으로 로그인하면 이곳에서 일정을 수정할
+                  수 있습니다.
                 </div>
               ) : (
                 <div className="schedule-admin-area">
@@ -618,6 +634,35 @@ function Schedule({ isAdmin }) {
             </div>
           </div>
         </div>
+        <ConfirmDialog
+          open={isRepeatConfirmOpen}
+          title="반복 일정 등록"
+          message={`${repeatMonthLabel}에 ${repeatWeekdayText} 일정 ${repeatDates.length}개를 한 번에 등록할까요?`}
+          confirmLabel="등록"
+          isSubmitting={isSubmitting}
+          onConfirm={saveMonthlyRepeatEntries}
+          onClose={() => {
+            if (!isSubmitting) {
+              setIsRepeatConfirmOpen(false);
+            }
+          }}
+        />
+        <ConfirmDialog
+          open={!!entryToDelete}
+          title="일정 삭제"
+          message={
+            entryToDelete ? `"${entryToDelete.title}" 일정을 삭제할까요?` : ""
+          }
+          confirmLabel="삭제"
+          tone="danger"
+          isSubmitting={isSubmitting}
+          onConfirm={handleDelete}
+          onClose={() => {
+            if (!isSubmitting) {
+              setEntryToDelete(null);
+            }
+          }}
+        />
       </div>
     </section>
   );

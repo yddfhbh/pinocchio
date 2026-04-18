@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmDialog } from "../components/Dialog";
 import useGuestbookEntries from "../hooks/useGuestbookEntries";
 import {
   deleteGuestbookEntry,
@@ -18,6 +19,7 @@ function Guestbook({ isAdmin }) {
   const [status, setStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState("");
+  const [entryToDelete, setEntryToDelete] = useState(null);
 
   const remainingCount = GUESTBOOK_MESSAGE_LIMIT - message.length;
 
@@ -64,18 +66,18 @@ function Guestbook({ isAdmin }) {
     }
   };
 
-  const handleDelete = async (entry) => {
-    if (!window.confirm("이 방명록 메시지를 삭제할까요?")) {
+  const handleDelete = async () => {
+    if (!entryToDelete) {
       return;
     }
 
-    setDeletingId(entry.id);
+    setDeletingId(entryToDelete.id);
     setStatus(null);
 
     try {
-      await deleteGuestbookEntry(entry.id);
+      await deleteGuestbookEntry(entryToDelete.id);
       setEntries((currentEntries) =>
-        currentEntries.filter((currentEntry) => currentEntry.id !== entry.id)
+        currentEntries.filter((currentEntry) => currentEntry.id !== entryToDelete.id)
       );
       setStatus({
         type: "success",
@@ -91,6 +93,7 @@ function Guestbook({ isAdmin }) {
       });
     } finally {
       setDeletingId("");
+      setEntryToDelete(null);
     }
   };
 
@@ -192,7 +195,7 @@ function Guestbook({ isAdmin }) {
                       <button
                         type="button"
                         className="btn btn-light guestbook-delete-button"
-                        onClick={() => handleDelete(entry)}
+                        onClick={() => setEntryToDelete(entry)}
                         disabled={!!error || deletingId === entry.id}
                       >
                         {deletingId === entry.id ? "삭제 중..." : "삭제"}
@@ -209,6 +212,20 @@ function Guestbook({ isAdmin }) {
             )}
           </div>
         )}
+        <ConfirmDialog
+          open={!!entryToDelete}
+          title="방명록 삭제"
+          message="이 방명록 메시지를 삭제할까요?"
+          confirmLabel="삭제"
+          tone="danger"
+          isSubmitting={!!deletingId}
+          onConfirm={handleDelete}
+          onClose={() => {
+            if (!deletingId) {
+              setEntryToDelete(null);
+            }
+          }}
+        />
       </div>
     </section>
   );

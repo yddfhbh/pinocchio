@@ -1,43 +1,50 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { PromptDialog } from "./Dialog";
 
 function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
-  const [adminCode, setAdminCode] = useState("");
   const [status, setStatus] = useState(null);
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [adminCode, setAdminCode] = useState("");
+  const [adminCodeError, setAdminCodeError] = useState("");
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
+  const handleAdminAction = async () => {
     setStatus(null);
 
-    try {
-      await onLogin(adminCode);
-      setAdminCode("");
-      setStatus({
-        type: "success",
-        text: "관리자 로그인 상태입니다.",
-      });
-    } catch (error) {
-      setStatus({
-        type: "error",
-        text: error instanceof Error ? error.message : "관리자 로그인에 실패했습니다.",
-      });
+    if (isAdmin) {
+      try {
+        await onLogout();
+        setStatus(null);
+      } catch (error) {
+        setStatus({
+          type: "error",
+          text: error instanceof Error ? error.message : "로그아웃에 실패했습니다.",
+        });
+      }
+
+      return;
     }
+    setAdminCode("");
+    setAdminCodeError("");
+    setIsLoginDialogOpen(true);
   };
 
-  const handleLogout = async () => {
-    setStatus(null);
+  const handleLoginConfirm = async () => {
+    if (!adminCode.trim()) {
+      setAdminCodeError("관리자 코드를 입력해주세요.");
+      return;
+    }
 
     try {
-      await onLogout();
-      setStatus({
-        type: "success",
-        text: "관리자 로그아웃이 완료되었습니다.",
-      });
+      await onLogin(adminCode.trim());
+      setIsLoginDialogOpen(false);
+      setAdminCode("");
+      setAdminCodeError("");
+      setStatus(null);
     } catch (error) {
-      setStatus({
-        type: "error",
-        text: error instanceof Error ? error.message : "로그아웃에 실패했습니다.",
-      });
+      setAdminCodeError(
+        error instanceof Error ? error.message : "관리자 로그인에 실패했습니다."
+      );
     }
   };
 
@@ -54,56 +61,48 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
           <Link to="/scores">악보실</Link>
           <Link to="/videos">공연 영상</Link>
           <Link to="/schedule">일정</Link>
-          <Link to="/guestbook">방명록</Link>
+          <span className="nav-admin-group">
+            <Link to="/guestbook">방명록</Link>
+            <button
+              type="button"
+              className={`nav-admin-button${isAdmin ? " is-active" : ""}`}
+              onClick={handleAdminAction}
+              disabled={isLoading || isSubmitting}
+            >
+              {isLoading ? "확인 중" : isSubmitting ? "처리 중" : isAdmin ? "로그아웃" : "관리자"}
+            </button>
+          </span>
         </nav>
       </div>
-
-      <div className="header-admin-strip">
-        <div className="container header-admin-strip-inner">
-          {isAdmin ? (
-            <div className="header-admin-mini">
-              <span className="header-admin-mini-badge">관리자</span>
-              <button
-                type="button"
-                className="btn btn-light header-admin-mini-button"
-                onClick={handleLogout}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "처리 중..." : "로그아웃"}
-              </button>
-            </div>
-          ) : (
-            <form className="header-admin-mini" onSubmit={handleLogin}>
-              <input
-                type="password"
-                placeholder="관리자 코드"
-                value={adminCode}
-                onChange={(event) => {
-                  setAdminCode(event.target.value);
-
-                  if (status) {
-                    setStatus(null);
-                  }
-                }}
-                disabled={isLoading || isSubmitting}
-              />
-              <button
-                type="submit"
-                className="btn btn-dark header-admin-mini-button"
-                disabled={!adminCode.trim() || isLoading || isSubmitting}
-              >
-                {isLoading ? "확인 중..." : isSubmitting ? "로그인" : "로그인"}
-              </button>
-            </form>
-          )}
-
-          {status ? (
-            <p className={`guestbook-status header-admin-mini-status is-${status.type}`}>
-              {status.text}
-            </p>
-          ) : null}
+      {status ? (
+        <div className="container">
+          <p className={`guestbook-status header-status is-${status.type}`}>{status.text}</p>
         </div>
-      </div>
+      ) : null}
+      <PromptDialog
+        open={isLoginDialogOpen}
+        title="관리자 로그인"
+        message="관리자 코드를 입력하면 관리 모드로 전환됩니다."
+        value={adminCode}
+        placeholder="관리자 코드"
+        errorText={adminCodeError}
+        confirmLabel="로그인"
+        isSubmitting={isSubmitting}
+        onChange={(value) => {
+          setAdminCode(value);
+          if (adminCodeError) {
+            setAdminCodeError("");
+          }
+        }}
+        onConfirm={handleLoginConfirm}
+        onClose={() => {
+          if (!isSubmitting) {
+            setIsLoginDialogOpen(false);
+            setAdminCode("");
+            setAdminCodeError("");
+          }
+        }}
+      />
     </header>
   );
 }
