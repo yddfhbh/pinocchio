@@ -54,7 +54,7 @@ a {
 .nav {
   display: flex;
   gap: 24px;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
 }
 
@@ -82,13 +82,13 @@ a {
 }
 
 .header-admin-mini input {
-  width: 102px;
+  width: 98px;
   border: 1px solid #cbd5e1;
   border-radius: 7px;
-  height: 24px;
-  padding: 3px 7px;
+  height: 22px;
+  padding: 2px 6px;
   background: #fff;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
   font-family: inherit;
 }
@@ -100,11 +100,11 @@ a {
 }
 
 .header-admin-mini-button {
-  min-height: 24px;
-  height: 24px;
-  padding: 3px 8px;
+  min-height: 22px;
+  height: 22px;
+  padding: 2px 7px;
   border-radius: 7px;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
 }
 
@@ -422,7 +422,7 @@ a {
 
 .schedule-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.68fr);
   gap: 24px;
   align-items: start;
 }
