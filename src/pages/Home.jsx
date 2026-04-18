@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
+import useGuestbookEntries from "../hooks/useGuestbookEntries";
+import { formatGuestbookDate } from "../lib/guestbook";
 
 function Home() {
+  const { entries: guestbookEntries, error, isLoading } = useGuestbookEntries(3);
+
   return (
     <div>
       <section className="hero home-layout">
@@ -77,15 +81,28 @@ function Home() {
             </div>
 
             <div className="guestbook-preview-card guestbook-side-card">
-              <div className="guestbook-message">
-                <p>“피노키오 공연 정말 잘 봤어요. 다음 공연도 기대할게요!”</p>
-              </div>
-              <div className="guestbook-message">
-                <p>“홈페이지가 깔끔해서 동아리 분위기가 더 잘 느껴져요.”</p>
-              </div>
-              <div className="guestbook-message">
-                <p>“연주도 멋지고 기록이 남는다는 게 정말 좋은 것 같아요.”</p>
-              </div>
+              {error ? (
+                <div className="guestbook-empty preview-empty">
+                  서버 연결 전에는 예시 메시지를 보여줍니다.
+                </div>
+              ) : null}
+
+              {isLoading ? (
+                <div className="guestbook-empty preview-empty">
+                  방명록을 불러오는 중입니다.
+                </div>
+              ) : guestbookEntries.length ? (
+                guestbookEntries.map((entry) => (
+                  <div className="guestbook-message" key={entry.id}>
+                    <p>“{entry.message}”</p>
+                    <span>{formatGuestbookDate(entry.createdAt)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="guestbook-empty preview-empty">
+                  아직 남겨진 메시지가 없어요.
+                </div>
+              )}
 
               <div className="guestbook-button-wrap">
                 <Link to="/guestbook" className="btn btn-dark">

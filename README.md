@@ -41,3 +41,19 @@
 
 ---
 
+## 방명록 서버 저장
+
+방명록은 `Vercel Functions + Postgres` 구조로 동작하도록 구성되어 있습니다.
+
+1. Vercel 프로젝트에 Postgres를 연결합니다.
+2. 환경 변수 `DATABASE_URL` 또는 `POSTGRES_URL`을 설정합니다.
+3. 배포 후 `/api/guestbook` 함수가 자동으로 테이블을 생성하고 읽기/쓰기를 처리합니다.
+
+로컬에서 API까지 함께 확인하려면 Vercel CLI로 함수 서버를 띄우고, Vite 개발 서버를 같이 실행하면 됩니다.
+
+- 프론트: `npm run dev`
+- API: `vercel dev --listen 3000`
+
+`vite.config.js`에 `/api` 프록시가 들어 있어서, 위처럼 실행하면 프론트에서 같은 경로로 API를 호출할 수 있습니다.
+
+예시 환경 변수는 [.env.example](./.env.example)에 있습니다.
