@@ -4,15 +4,32 @@ import { Pool } from "pg";
 let pool;
 let initPromise;
 
+function sanitizeConnectionString(connectionString) {
+  try {
+    const url = new URL(connectionString);
+
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("sslcert");
+    url.searchParams.delete("sslkey");
+    url.searchParams.delete("sslrootcert");
+
+    return url.toString();
+  } catch {
+    return connectionString;
+  }
+}
+
 function getPool() {
-  const connectionString =
+  const rawConnectionString =
     process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
-  if (!connectionString) {
+  if (!rawConnectionString) {
     throw new Error(
       "DATABASE_URL 또는 POSTGRES_URL이 설정되지 않았습니다. Vercel 프로젝트 환경 변수에 Postgres 연결 문자열을 추가해주세요."
     );
   }
+
+  const connectionString = sanitizeConnectionString(rawConnectionString);
 
   if (!pool) {
     pool = new Pool({
