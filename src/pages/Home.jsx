@@ -62,6 +62,37 @@ function Home() {
           </div>
         </div>
       </section>
+
+      <section className="home-video-section">
+        <div className="container">
+          <div className="home-video-header">
+            <h2>대표 공연 영상</h2>
+            <p>
+              메인 페이지에서 바로 감상할 수 있는
+              피노키오의 대표 공연 영상입니다.
+            </p>
+          </div>
+
+          <div className="home-video-card">
+            <div className="video-frame">
+              <iframe
+                src="https://www.youtube.com/embed/bZxeSLM4TWs"
+                title="Where is BLUE (김푸른 리사이틀) 1부"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+
+            <div className="video-info">
+              <h3>Where is BLUE (김푸른 리사이틀) 1부</h3>
+              <p>
+                피노키오의 대표 공연 영상입니다.
+                메인 페이지에서 바로 공연 분위기를 느낄 수 있도록 배치했습니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
