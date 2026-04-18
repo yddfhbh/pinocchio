@@ -1,16 +1,43 @@
-# React + Vite
+# 피노키오 (Pinocchio)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+부산대학교 팬플룻 동아리 **피노키오**의 공식 웹사이트입니다.  
+동아리 소개, 활동 내용, 공연 및 모집 정보 등을 한눈에 확인할 수 있도록 제작한 웹 프로젝트입니다.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 프로젝트 소개
 
-## React Compiler
+피노키오는 부산대학교의 팬플룻 동아리로, 팬플룻 연주를 중심으로 다양한 음악 활동과 공연을 이어가는 동아리입니다.  
+이 웹사이트는 동아리를 처음 접하는 사람들에게 피노키오를 소개하고, 기존 부원들과 방문자들이 필요한 정보를 쉽고 편하게 확인할 수 있도록 만들었습니다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+사용자가 동아리의 분위기와 활동을 자연스럽게 이해할 수 있도록 시각적인 구성에 집중했고, 다양한 환경에서도 편하게 이용할 수 있도록 웹사이트 형태로 구현했습니다.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 주요 기능
+
+- 동아리 소개
+- 활동 및 공연 정보 안내
+- 이미지 중심의 콘텐츠 구성
+- 직관적인 사용자 인터페이스
+- 반응형 웹 페이지
+
+---
+
+## 사용 기술
+
+### Frontend
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+- React
+
+### Development Tool
+- Vite
+- npm
+
+### Deployment
+- Vercel
+
+---
+
