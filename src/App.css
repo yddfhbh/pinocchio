@@ -322,6 +322,21 @@ a {
   font-size: 16px;
 }
 
+.about-page-title {
+  flex: 1;
+}
+
+.about-page-title .page-description {
+  max-width: none;
+}
+
+.about-admin-toggle {
+  min-width: 142px;
+  padding: 12px 18px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
 .videos-main-card {
   max-width: 100%;
 }
@@ -416,27 +431,7 @@ a {
 }
 
 .videos-related-section {
-  display: grid;
-  gap: 16px;
   margin-top: 20px;
-}
-
-.videos-related-head {
-  display: grid;
-  gap: 6px;
-}
-
-.videos-related-head h3 {
-  margin: 0;
-  font-size: 22px;
-  color: #111827;
-}
-
-.videos-related-head p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 15px;
-  line-height: 1.6;
 }
 
 .videos-related-grid {

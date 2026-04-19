@@ -75,8 +75,8 @@ function About({ isAdmin }) {
   return (
     <section className="page-section">
       <div className="container">
-        <div className="videos-page-header">
-          <div className="videos-page-title">
+        <div className="videos-page-header about-page-header">
+          <div className="videos-page-title about-page-title">
             <h2>{ABOUT_PAGE_TITLE}</h2>
             <p className="page-description">{content.intro}</p>
           </div>
@@ -84,7 +84,7 @@ function About({ isAdmin }) {
           {isAdmin ? (
             <button
               type="button"
-              className="btn btn-dark videos-admin-toggle"
+              className="btn btn-dark videos-admin-toggle about-admin-toggle"
               onClick={() => setIsEditorOpen((current) => !current)}
             >
               {isEditorOpen ? "소개 편집 닫기" : "소개 편집"}

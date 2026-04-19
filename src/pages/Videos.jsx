@@ -287,11 +287,6 @@ function Videos({ isAdmin }) {
 
                 {secondaryVideos.length ? (
                   <div className="videos-related-section">
-                    <div className="videos-related-head">
-                      <h3>추가 영상</h3>
-                      <p>같은 분류에 등록된 다른 공연 영상을 바로 이어서 볼 수 있습니다.</p>
-                    </div>
-
                     <div className="videos-related-grid">
                       {secondaryVideos.map((entry) => (
                         <article key={entry.id} className="home-video-card videos-related-card">
