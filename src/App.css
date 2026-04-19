@@ -326,14 +326,19 @@ a {
   flex: 1;
 }
 
+.about-page-title h2 {
+  margin-bottom: 10px;
+}
+
 .about-page-title .page-description {
   max-width: none;
 }
 
 .about-admin-toggle {
-  min-width: 142px;
-  padding: 12px 18px;
-  font-size: 15px;
+  min-width: 108px;
+  padding: 9px 14px;
+  font-size: 13px;
+  border-radius: 12px;
   white-space: nowrap;
 }
 
