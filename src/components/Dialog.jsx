@@ -6,13 +6,18 @@ export function DialogFrame({
   actions,
   onClose,
   className = "",
+  closeOnBackdrop = true,
 }) {
   if (!open) {
     return null;
   }
 
   return (
-    <div className="dialog-backdrop" role="presentation" onClick={onClose}>
+    <div
+      className="dialog-backdrop"
+      role="presentation"
+      onClick={closeOnBackdrop ? onClose : undefined}
+    >
       <div
         className={`dialog-card${className ? ` ${className}` : ""}`}
         role="dialog"

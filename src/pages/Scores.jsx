@@ -470,6 +470,7 @@ function Scores({ isAdmin }) {
               : "일반 유저도 등록할 수 있고, 수정과 삭제는 관리자만 가능합니다."
           }
           className="dialog-card-wide"
+          closeOnBackdrop={false}
           onClose={closeFormDialog}
         >
           <form className="scores-admin-form" onSubmit={handleSave}>
@@ -632,12 +633,11 @@ function Scores({ isAdmin }) {
                 );
               }}
             />
-            <p className="scores-admin-hint">
-              Vercel Blob 업로드는 현재 10MB 이하 PDF 기준으로 연결했습니다.
-              {uploadFile
-                ? ` 선택한 파일: ${uploadFile.name} (${formatScoreFileSize(uploadFile.size)})`
-                : " 파일을 올리면 자동으로 저장소 링크가 생성됩니다."}
-            </p>
+            {uploadFile ? (
+              <p className="scores-admin-hint">
+                선택한 파일: {uploadFile.name} ({formatScoreFileSize(uploadFile.size)})
+              </p>
+            ) : null}
             {uploadFile && uploadProgress ? (
               <div
                 className="scores-upload-progress"
@@ -677,11 +677,6 @@ function Scores({ isAdmin }) {
                 }))
               }
             ></textarea>
-
-            <p className="scores-admin-hint">
-              파일을 업로드하면 Blob URL이 저장되고, 링크만 입력하면 외부 악보 자료도 함께
-              보관할 수 있습니다.
-            </p>
 
             <div className="schedule-form-actions">
               {formMode === "edit" ? (
