@@ -1,13 +1,37 @@
 export const HOME_VIDEO_TITLE_LIMIT = 120;
 export const HOME_VIDEO_URL_LIMIT = 500;
 
+export const HOME_VIDEO_CATEGORIES = [
+  { value: "regular", label: "정기공연" },
+  { value: "recruitment", label: "공개모집" },
+  { value: "special", label: "특별공연" },
+];
+
+const HOME_VIDEO_CATEGORY_VALUES = new Set(
+  HOME_VIDEO_CATEGORIES.map((category) => category.value)
+);
+
+export const DEFAULT_HOME_VIDEO_CATEGORY = HOME_VIDEO_CATEGORIES[0].value;
+
 export const DEFAULT_HOME_VIDEO_ENTRIES = [
   {
     id: "sample-home-video-1",
-    title: "Where is BLUE (김다린 리사이틀) 1부",
+    title: "Where is BLUE (김푸른 리사이틀) 1부",
     sourceUrl: "https://www.youtube.com/watch?v=bZxeSLM4TWs",
+    category: DEFAULT_HOME_VIDEO_CATEGORY,
   },
 ];
+
+export function normalizeHomeVideoCategory(value) {
+  return HOME_VIDEO_CATEGORY_VALUES.has(value) ? value : DEFAULT_HOME_VIDEO_CATEGORY;
+}
+
+export function getHomeVideoCategoryLabel(value) {
+  return (
+    HOME_VIDEO_CATEGORIES.find((category) => category.value === value)?.label ||
+    HOME_VIDEO_CATEGORIES[0].label
+  );
+}
 
 function normalizeVideoId(value) {
   return typeof value === "string" && /^[A-Za-z0-9_-]{11}$/.test(value) ? value : "";
@@ -85,6 +109,7 @@ function normalizeHomeVideoEntry(entry, index) {
         ? entry.url.trim().slice(0, HOME_VIDEO_URL_LIMIT)
         : "";
   const embedUrl = toHomeVideoEmbedUrl(sourceUrl);
+  const category = normalizeHomeVideoCategory(entry.category);
 
   if (!title || !sourceUrl || !embedUrl) {
     return null;
@@ -95,6 +120,7 @@ function normalizeHomeVideoEntry(entry, index) {
     title,
     sourceUrl,
     embedUrl,
+    category,
   };
 }
 

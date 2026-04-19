@@ -1,6 +1,8 @@
 import {
+  DEFAULT_HOME_VIDEO_CATEGORY,
   HOME_VIDEO_TITLE_LIMIT,
   HOME_VIDEO_URL_LIMIT,
+  normalizeHomeVideoCategory,
   toHomeVideoEmbedUrl,
 } from "../src/lib/homeVideos.js";
 import { isAdminRequest } from "./_auth.js";
@@ -34,10 +36,12 @@ function normalizeVideoInput(body) {
       : typeof body?.url === "string"
         ? body.url.trim().slice(0, HOME_VIDEO_URL_LIMIT)
         : "";
+  const category = normalizeHomeVideoCategory(body?.category);
 
   return {
     title,
     sourceUrl,
+    category,
     embedUrl: toHomeVideoEmbedUrl(sourceUrl),
   };
 }
@@ -47,6 +51,7 @@ function toEntry(row) {
     id: String(row.id),
     title: row.title,
     sourceUrl: row.source_url,
+    category: normalizeHomeVideoCategory(row.category || DEFAULT_HOME_VIDEO_CATEGORY),
   };
 }
 
@@ -56,7 +61,7 @@ export default async function handler(request, response) {
       await ensureHomeVideosTable();
 
       const result = await query(
-        `SELECT id, title, source_url
+        `SELECT id, title, source_url, category
          FROM home_videos
          ORDER BY created_at ASC, id ASC`
       );
@@ -68,9 +73,7 @@ export default async function handler(request, response) {
     } catch (error) {
       return sendJson(response, 500, {
         error:
-          error instanceof Error
-            ? error.message
-            : "대표 공연 영상을 불러오지 못했습니다.",
+          error instanceof Error ? error.message : "대표 공연 영상을 불러오지 못했습니다.",
       });
     }
   }
@@ -85,11 +88,11 @@ export default async function handler(request, response) {
     try {
       await ensureHomeVideosTable();
 
-      const { title, sourceUrl, embedUrl } = normalizeVideoInput(await readBody(request));
+      const { title, sourceUrl, category, embedUrl } = normalizeVideoInput(await readBody(request));
 
       if (!title || !sourceUrl) {
         return sendJson(response, 400, {
-          error: "영상 제목과 URL을 모두 입력해주세요.",
+          error: "영상 제목과 URL을 모두 입력해 주세요.",
         });
       }
 
@@ -100,10 +103,10 @@ export default async function handler(request, response) {
       }
 
       const result = await query(
-        `INSERT INTO home_videos (title, source_url)
-         VALUES ($1, $2)
-         RETURNING id, title, source_url`,
-        [title, sourceUrl]
+        `INSERT INTO home_videos (title, source_url, category)
+         VALUES ($1, $2, $3)
+         RETURNING id, title, source_url, category`,
+        [title, sourceUrl, category]
       );
 
       return sendJson(response, 201, {
@@ -112,9 +115,7 @@ export default async function handler(request, response) {
     } catch (error) {
       return sendJson(response, 500, {
         error:
-          error instanceof Error
-            ? error.message
-            : "대표 공연 영상을 등록하지 못했습니다.",
+          error instanceof Error ? error.message : "대표 공연 영상을 등록하지 못했습니다.",
       });
     }
   }
@@ -128,7 +129,7 @@ export default async function handler(request, response) {
 
       if (!Number.isFinite(id)) {
         return sendJson(response, 400, {
-          error: "삭제할 영상을 선택해주세요.",
+          error: "삭제할 영상을 선택해 주세요.",
         });
       }
 
@@ -151,9 +152,7 @@ export default async function handler(request, response) {
     } catch (error) {
       return sendJson(response, 500, {
         error:
-          error instanceof Error
-            ? error.message
-            : "대표 공연 영상을 삭제하지 못했습니다.",
+          error instanceof Error ? error.message : "대표 공연 영상을 삭제하지 못했습니다.",
       });
     }
   }

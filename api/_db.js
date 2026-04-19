@@ -134,6 +134,7 @@ export async function ensureHomeVideosTable() {
           id BIGSERIAL PRIMARY KEY,
           title VARCHAR(120) NOT NULL,
           source_url TEXT NOT NULL,
+          category VARCHAR(30) NOT NULL DEFAULT 'regular',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`
       );
@@ -145,6 +146,15 @@ export async function ensureHomeVideosTable() {
       await query(
         `ALTER TABLE home_videos
          ADD COLUMN IF NOT EXISTS source_url TEXT`
+      );
+      await query(
+        `ALTER TABLE home_videos
+         ADD COLUMN IF NOT EXISTS category VARCHAR(30) NOT NULL DEFAULT 'regular'`
+      );
+      await query(
+        `UPDATE home_videos
+         SET category = 'regular'
+         WHERE category IS NULL OR category = ''`
       );
     })().catch((error) => {
       homeVideoInitPromise = null;

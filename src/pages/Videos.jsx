@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ConfirmDialog } from "../components/Dialog";
 import useHomeVideos from "../hooks/useHomeVideos";
 import {
   deleteHomeVideoEntry,
+  getHomeVideoCategoryLabel,
+  HOME_VIDEO_CATEGORIES,
   HOME_VIDEO_TITLE_LIMIT,
   HOME_VIDEO_URL_LIMIT,
   saveHomeVideoEntry,
 } from "../lib/homeVideos";
-
-const VIDEO_CATEGORY_LABELS = ["정기공연", "공개모집", "특별공연"];
 
 function Videos({ isAdmin }) {
   const {
@@ -19,39 +19,66 @@ function Videos({ isAdmin }) {
     isFallbackData,
     markLiveData,
   } = useHomeVideos();
+  const [selectedCategory, setSelectedCategory] = useState(HOME_VIDEO_CATEGORIES[0].value);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [formValues, setFormValues] = useState({
     title: "",
     sourceUrl: "",
+    category: HOME_VIDEO_CATEGORIES[0].value,
   });
   const [formStatus, setFormStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState(null);
 
+  const filteredEntries = useMemo(
+    () => homeVideoEntries.filter((entry) => entry.category === selectedCategory),
+    [homeVideoEntries, selectedCategory]
+  );
+
   useEffect(() => {
-    if (homeVideoEntries.length <= 1) {
+    const hasSelectedCategory = homeVideoEntries.some(
+      (entry) => entry.category === selectedCategory
+    );
+
+    if (!hasSelectedCategory) {
+      const nextCategory =
+        HOME_VIDEO_CATEGORIES.find((category) =>
+          homeVideoEntries.some((entry) => entry.category === category.value)
+        )?.value || HOME_VIDEO_CATEGORIES[0].value;
+
+      setSelectedCategory(nextCategory);
+    }
+  }, [homeVideoEntries, selectedCategory]);
+
+  useEffect(() => {
+    setCurrentVideoIndex(0);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (filteredEntries.length <= 1) {
       return undefined;
     }
 
     const intervalId = window.setInterval(() => {
-      setCurrentVideoIndex((currentIndex) => (currentIndex + 1) % homeVideoEntries.length);
+      setCurrentVideoIndex((currentIndex) => (currentIndex + 1) % filteredEntries.length);
     }, 5000);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [homeVideoEntries.length]);
+  }, [filteredEntries.length]);
 
-  const activeVideoIndex = homeVideoEntries.length
-    ? currentVideoIndex % homeVideoEntries.length
+  const activeVideoIndex = filteredEntries.length
+    ? currentVideoIndex % filteredEntries.length
     : 0;
-  const activeVideo = homeVideoEntries[activeVideoIndex] || null;
+  const activeVideo = filteredEntries[activeVideoIndex] || null;
 
   const resetVideoForm = () => {
     setFormValues({
       title: "",
       sourceUrl: "",
+      category: selectedCategory,
     });
   };
 
@@ -67,7 +94,12 @@ function Videos({ isAdmin }) {
         isFallbackData ? [entry] : [...currentEntries, entry]
       );
       markLiveData();
-      resetVideoForm();
+      setSelectedCategory(entry.category);
+      setFormValues({
+        title: "",
+        sourceUrl: "",
+        category: entry.category,
+      });
       setCurrentVideoIndex(0);
       setFormStatus({
         type: "success",
@@ -146,51 +178,69 @@ function Videos({ isAdmin }) {
           </div>
         ) : null}
 
-        <div className="videos-category-list" aria-label="공연 영상 분류">
-          {VIDEO_CATEGORY_LABELS.map((label) => (
-            <button key={label} type="button" className="videos-category-button">
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {isHomeVideoLoading ? (
-          <div className="guestbook-empty home-video-empty">
-            대표 공연 영상을 불러오는 중입니다.
+        <div className="videos-page-content">
+          <div className="videos-category-list" role="tablist" aria-label="공연 영상 분류">
+            {HOME_VIDEO_CATEGORIES.map((category) => (
+              <button
+                key={category.value}
+                type="button"
+                role="tab"
+                aria-selected={selectedCategory === category.value}
+                className={`videos-category-button${
+                  selectedCategory === category.value ? " is-active" : ""
+                }`}
+                onClick={() => setSelectedCategory(category.value)}
+              >
+                {category.label}
+              </button>
+            ))}
           </div>
-        ) : activeVideo ? (
-          <div className="home-video-card videos-main-card">
-            <div className="video-frame">
-              <iframe
-                key={activeVideo.id}
-                src={activeVideo.embedUrl}
-                title={activeVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
 
-            <div className="video-info">
-              <div className="home-video-title-row">
-                <h3>{activeVideo.title}</h3>
-                {homeVideoEntries.length > 1 ? (
-                  <span className="home-video-rotation-badge">
-                    {activeVideoIndex + 1} / {homeVideoEntries.length}
-                  </span>
-                ) : null}
+          <div className="videos-page-main">
+            {isHomeVideoLoading ? (
+              <div className="guestbook-empty home-video-empty">
+                대표 공연 영상을 불러오는 중입니다.
               </div>
-              <p>
-                {homeVideoEntries.length > 1
-                  ? "등록된 대표 공연 영상을 5초 간격으로 번갈아 보여주고 있습니다."
-                  : "현재 메인 화면에 노출되는 대표 공연 영상입니다."}
-              </p>
-            </div>
+            ) : activeVideo ? (
+              <div className="home-video-card videos-main-card">
+                <div className="video-frame">
+                  <iframe
+                    key={activeVideo.id}
+                    src={activeVideo.embedUrl}
+                    title={activeVideo.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+
+                <div className="video-info">
+                  <div className="home-video-title-row">
+                    <div className="videos-title-block">
+                      <span className="videos-category-badge">
+                        {getHomeVideoCategoryLabel(activeVideo.category)}
+                      </span>
+                      <h3>{activeVideo.title}</h3>
+                    </div>
+                    {filteredEntries.length > 1 ? (
+                      <span className="home-video-rotation-badge">
+                        {activeVideoIndex + 1} / {filteredEntries.length}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p>
+                    {filteredEntries.length > 1
+                      ? "선택한 탭의 영상을 5초 간격으로 번갈아 보여주고 있습니다."
+                      : "선택한 탭에 등록된 대표 공연 영상입니다."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="guestbook-empty home-video-empty">
+                {getHomeVideoCategoryLabel(selectedCategory)} 탭에는 아직 등록된 영상이 없습니다.
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="guestbook-empty home-video-empty">
-            등록된 대표 공연 영상이 없습니다.
-          </div>
-        )}
+        </div>
 
         {isAdmin && isManagerOpen ? (
           <div className="home-video-admin-card">
@@ -202,6 +252,26 @@ function Videos({ isAdmin }) {
             </div>
 
             <form className="home-video-admin-form" onSubmit={handleVideoSubmit}>
+              <label className="guestbook-label" htmlFor="home-video-category">
+                카테고리
+              </label>
+              <select
+                id="home-video-category"
+                value={formValues.category}
+                onChange={(event) =>
+                  setFormValues((current) => ({
+                    ...current,
+                    category: event.target.value,
+                  }))
+                }
+              >
+                {HOME_VIDEO_CATEGORIES.map((category) => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+
               <label className="guestbook-label" htmlFor="home-video-title">
                 영상 제목
               </label>
@@ -264,6 +334,9 @@ function Videos({ isAdmin }) {
                 homeVideoEntries.map((entry) => (
                   <article className="home-video-admin-item" key={entry.id}>
                     <div className="home-video-admin-item-text">
+                      <span className="videos-category-badge">
+                        {getHomeVideoCategoryLabel(entry.category)}
+                      </span>
                       <strong>{entry.title}</strong>
                       <a
                         href={entry.sourceUrl}
