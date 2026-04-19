@@ -24,7 +24,7 @@ function App() {
       />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home isAdmin={adminSession.isAdmin} />} />
           <Route path="/about" element={<About />} />
           <Route path="/scores" element={<Scores />} />
           <Route path="/videos" element={<Videos />} />

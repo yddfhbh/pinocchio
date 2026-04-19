@@ -980,6 +980,123 @@ a {
   line-height: 1.8;
 }
 
+.home-video-title-row,
+.home-video-admin-head,
+.home-video-admin-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-video-title-row {
+  margin-bottom: 12px;
+}
+
+.home-video-title-row h3 {
+  margin: 0;
+}
+
+.home-video-rotation-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.home-video-empty {
+  margin: 0;
+}
+
+.home-video-admin-card {
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  background: #ffffff;
+}
+
+.home-video-admin-head {
+  margin-bottom: 16px;
+}
+
+.home-video-admin-head h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.home-video-admin-head span,
+.home-video-admin-item-text a,
+.home-video-admin-hint {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.home-video-admin-form {
+  display: grid;
+}
+
+.home-video-admin-form input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  margin-bottom: 12px;
+  font-family: inherit;
+}
+
+.home-video-admin-form input:focus {
+  outline: 2px solid #c7d2fe;
+  outline-offset: 2px;
+  border-color: #93c5fd;
+}
+
+.home-video-admin-hint {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.home-video-admin-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.home-video-admin-item {
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #f9fafb;
+}
+
+.home-video-admin-item-text {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.home-video-admin-item-text strong {
+  font-size: 16px;
+}
+
+.home-video-admin-link {
+  overflow-wrap: anywhere;
+}
+
+.home-video-delete-button {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
 @media (max-width: 640px) {
   .home-video-header h2 {
     font-size: 30px;
@@ -1232,8 +1349,15 @@ a {
   .schedule-calendar-toolbar,
   .schedule-panel-head,
   .calendar-card-head,
-  .schedule-entry-head {
+  .schedule-entry-head,
+  .home-video-title-row,
+  .home-video-admin-head,
+  .home-video-admin-item {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .home-video-delete-button {
+    width: 100%;
   }
 }

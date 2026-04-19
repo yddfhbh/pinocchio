@@ -4,6 +4,7 @@ import { Pool } from "pg";
 let pool;
 let guestbookInitPromise;
 let scheduleInitPromise;
+let homeVideoInitPromise;
 
 function sanitizeConnectionString(connectionString) {
   try {
@@ -123,4 +124,33 @@ export async function ensureScheduleTable() {
   }
 
   return scheduleInitPromise;
+}
+
+export async function ensureHomeVideosTable() {
+  if (!homeVideoInitPromise) {
+    homeVideoInitPromise = (async () => {
+      await query(
+        `CREATE TABLE IF NOT EXISTS home_videos (
+          id BIGSERIAL PRIMARY KEY,
+          title VARCHAR(120) NOT NULL,
+          source_url TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`
+      );
+
+      await query(
+        `ALTER TABLE home_videos
+         ADD COLUMN IF NOT EXISTS title VARCHAR(120)`
+      );
+      await query(
+        `ALTER TABLE home_videos
+         ADD COLUMN IF NOT EXISTS source_url TEXT`
+      );
+    })().catch((error) => {
+      homeVideoInitPromise = null;
+      throw error;
+    });
+  }
+
+  return homeVideoInitPromise;
 }
