@@ -8,6 +8,8 @@ import {
   updateAboutContent,
 } from "../lib/aboutContent";
 
+const ABOUT_PAGE_TITLE = "동아리 소개";
+
 function toFormValues(content) {
   return {
     intro: content.intro,
@@ -75,7 +77,7 @@ function About({ isAdmin }) {
       <div className="container">
         <div className="videos-page-header">
           <div className="videos-page-title">
-            <h2>동아리 소개</h2>
+            <h2>{ABOUT_PAGE_TITLE}</h2>
             <p className="page-description">{content.intro}</p>
           </div>
 
@@ -128,6 +130,10 @@ function About({ isAdmin }) {
 
             <div className="schedule-admin-area">
               <form className="schedule-admin-form" onSubmit={handleSubmit}>
+                <p className="schedule-field-hint">
+                  페이지 상단 제목 "{ABOUT_PAGE_TITLE}"는 고정되어 있으며 수정되지 않습니다.
+                </p>
+
                 <label className="guestbook-label" htmlFor="about-intro">
                   소개 문장
                 </label>

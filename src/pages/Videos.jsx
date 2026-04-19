@@ -85,6 +85,9 @@ function Videos({ isAdmin }) {
 
   const activeVideo =
     filteredEntries.find((entry) => entry.id === selectedVideoId) || filteredEntries[0] || null;
+  const secondaryVideos = activeVideo
+    ? filteredEntries.filter((entry) => entry.id !== activeVideo.id)
+    : [];
 
   const resetVideoForm = () => {
     setEditingVideoId(null);
@@ -282,28 +285,39 @@ function Videos({ isAdmin }) {
                   </div>
                 </div>
 
-                {filteredEntries.length > 1 ? (
-                  <div className="videos-picker-list">
-                    {filteredEntries.map((entry) => (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        className={`videos-picker-item${
-                          activeVideo.id === entry.id ? " is-active" : ""
-                        }`}
-                        onClick={() => setSelectedVideoId(entry.id)}
-                      >
-                        <div className="videos-badge-row">
-                          <span className="videos-category-badge">
-                            {getHomeVideoCategoryLabel(entry.category)}
-                          </span>
-                          {entry.isHomeFeatured ? (
-                            <span className="videos-home-badge">홈페이지 표시 중</span>
-                          ) : null}
-                        </div>
-                        <strong>{entry.title}</strong>
-                      </button>
-                    ))}
+                {secondaryVideos.length ? (
+                  <div className="videos-related-section">
+                    <div className="videos-related-head">
+                      <h3>추가 영상</h3>
+                      <p>같은 분류에 등록된 다른 공연 영상을 바로 이어서 볼 수 있습니다.</p>
+                    </div>
+
+                    <div className="videos-related-grid">
+                      {secondaryVideos.map((entry) => (
+                        <article key={entry.id} className="home-video-card videos-related-card">
+                          <div className="video-frame">
+                            <iframe
+                              src={entry.embedUrl}
+                              title={entry.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+
+                          <div className="video-info">
+                            <div className="videos-badge-row">
+                              <span className="videos-category-badge">
+                                {getHomeVideoCategoryLabel(entry.category)}
+                              </span>
+                              {entry.isHomeFeatured ? (
+                                <span className="videos-home-badge">홈페이지 표시 중</span>
+                              ) : null}
+                            </div>
+                            <h3>{entry.title}</h3>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
               </>

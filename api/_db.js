@@ -250,7 +250,7 @@ export async function ensureAboutContentTable() {
         ON CONFLICT (id) DO NOTHING`,
         [
           1,
-          "PINOCCHIO는 음악과 연주를 좋아하는 학생들이 모여 함께 연습하고 공연을 만들어가는 밴드 동아리입니다.",
+          "피노키오는 팬플룻을 좋아하는 학생들이 모여 함께 연습하고 공연하는 부산대학교의 중앙동아리입니다.",
           "우리가 하는 활동",
           JSON.stringify([
             "정기 합주와 개인 연습",
