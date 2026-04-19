@@ -294,6 +294,38 @@ a {
   margin-bottom: 32px;
 }
 
+.videos-page-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.videos-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.videos-page-title {
+  min-width: 0;
+}
+
+.videos-page-title .page-description {
+  max-width: 760px;
+  margin-bottom: 0;
+}
+
+.videos-admin-toggle {
+  flex-shrink: 0;
+  min-width: 180px;
+  padding: 14px 22px;
+  font-size: 16px;
+}
+
+.videos-main-card {
+  max-width: 100%;
+}
+
 .info-box,
 .list-card,
 .schedule-box,
@@ -912,6 +944,14 @@ a {
 
   .btn {
     width: 100%;
+  }
+
+  .videos-page-header {
+    flex-direction: column;
+  }
+
+  .videos-admin-toggle {
+    min-width: 0;
   }
 
   .hero-buttons {
