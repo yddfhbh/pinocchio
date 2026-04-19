@@ -135,6 +135,7 @@ export async function ensureHomeVideosTable() {
           title VARCHAR(120) NOT NULL,
           source_url TEXT NOT NULL,
           category VARCHAR(30) NOT NULL DEFAULT 'regular',
+          is_home_featured BOOLEAN NOT NULL DEFAULT FALSE,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`
       );
@@ -152,9 +153,39 @@ export async function ensureHomeVideosTable() {
          ADD COLUMN IF NOT EXISTS category VARCHAR(30) NOT NULL DEFAULT 'regular'`
       );
       await query(
+        `ALTER TABLE home_videos
+         ADD COLUMN IF NOT EXISTS is_home_featured BOOLEAN NOT NULL DEFAULT FALSE`
+      );
+      await query(
         `UPDATE home_videos
          SET category = 'regular'
          WHERE category IS NULL OR category = ''`
+      );
+      await query(
+        `UPDATE home_videos
+         SET is_home_featured = FALSE
+         WHERE is_home_featured IS NULL`
+      );
+      await query(
+        `WITH first_video AS (
+          SELECT id
+          FROM home_videos
+          ORDER BY created_at ASC, id ASC
+          LIMIT 1
+        )
+        UPDATE home_videos
+        SET is_home_featured = TRUE
+        WHERE id IN (SELECT id FROM first_video)
+          AND NOT EXISTS (
+            SELECT 1
+            FROM home_videos
+            WHERE is_home_featured = TRUE
+          )`
+      );
+      await query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS home_videos_single_home_featured_idx
+         ON home_videos ((1))
+         WHERE is_home_featured = TRUE`
       );
     })().catch((error) => {
       homeVideoInitPromise = null;

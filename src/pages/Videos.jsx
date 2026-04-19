@@ -8,6 +8,7 @@ import {
   HOME_VIDEO_TITLE_LIMIT,
   HOME_VIDEO_URL_LIMIT,
   saveHomeVideoEntry,
+  updateHomeVideoEntry,
 } from "../lib/homeVideos";
 
 function Videos({ isAdmin }) {
@@ -20,12 +21,14 @@ function Videos({ isAdmin }) {
     markLiveData,
   } = useHomeVideos();
   const [selectedCategory, setSelectedCategory] = useState(HOME_VIDEO_CATEGORIES[0].value);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [selectedVideoId, setSelectedVideoId] = useState("");
+  const [editingVideoId, setEditingVideoId] = useState(null);
   const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [formValues, setFormValues] = useState({
     title: "",
     sourceUrl: "",
     category: HOME_VIDEO_CATEGORIES[0].value,
+    isHomeFeatured: false,
   });
   const [formStatus, setFormStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +38,11 @@ function Videos({ isAdmin }) {
     () => homeVideoEntries.filter((entry) => entry.category === selectedCategory),
     [homeVideoEntries, selectedCategory]
   );
+  const featuredVideo = homeVideoEntries.find((entry) => entry.isHomeFeatured) || null;
+  const hasFeaturedConflict =
+    featuredVideo && (!editingVideoId || featuredVideo.id !== editingVideoId);
+  const homeFeatureCheckboxDisabled =
+    isSubmitting || (hasFeaturedConflict && !formValues.isHomeFeatured);
 
   useEffect(() => {
     const hasSelectedCategory = homeVideoEntries.some(
@@ -52,34 +60,41 @@ function Videos({ isAdmin }) {
   }, [homeVideoEntries, selectedCategory]);
 
   useEffect(() => {
-    setCurrentVideoIndex(0);
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    if (filteredEntries.length <= 1) {
-      return undefined;
+    if (!filteredEntries.length) {
+      if (selectedVideoId) {
+        setSelectedVideoId("");
+      }
+      return;
     }
 
-    const intervalId = window.setInterval(() => {
-      setCurrentVideoIndex((currentIndex) => (currentIndex + 1) % filteredEntries.length);
-    }, 5000);
+    const selectedExists = filteredEntries.some((entry) => entry.id === selectedVideoId);
 
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [filteredEntries.length]);
+    if (!selectedExists) {
+      setSelectedVideoId(filteredEntries[0].id);
+    }
+  }, [filteredEntries, selectedVideoId]);
 
-  const activeVideoIndex = filteredEntries.length
-    ? currentVideoIndex % filteredEntries.length
-    : 0;
-  const activeVideo = filteredEntries[activeVideoIndex] || null;
+  useEffect(() => {
+    if (!editingVideoId) {
+      setFormValues((current) => ({
+        ...current,
+        category: selectedCategory,
+      }));
+    }
+  }, [selectedCategory, editingVideoId]);
+
+  const activeVideo =
+    filteredEntries.find((entry) => entry.id === selectedVideoId) || filteredEntries[0] || null;
 
   const resetVideoForm = () => {
+    setEditingVideoId(null);
     setFormValues({
       title: "",
       sourceUrl: "",
       category: selectedCategory,
+      isHomeFeatured: false,
     });
+    setFormStatus(null);
   };
 
   const handleVideoSubmit = async (event) => {
@@ -88,22 +103,38 @@ function Videos({ isAdmin }) {
     setIsSubmitting(true);
 
     try {
-      const entry = await saveHomeVideoEntry(formValues);
+      const entry = editingVideoId
+        ? await updateHomeVideoEntry(editingVideoId, formValues)
+        : await saveHomeVideoEntry(formValues);
 
-      setHomeVideoEntries((currentEntries) =>
-        isFallbackData ? [entry] : [...currentEntries, entry]
-      );
+      setHomeVideoEntries((currentEntries) => {
+        if (isFallbackData) {
+          return [entry];
+        }
+
+        if (editingVideoId) {
+          return currentEntries.map((currentEntry) =>
+            currentEntry.id === entry.id ? entry : currentEntry
+          );
+        }
+
+        return [...currentEntries, entry];
+      });
       markLiveData();
       setSelectedCategory(entry.category);
+      setSelectedVideoId(entry.id);
+      setFormStatus({
+        type: "success",
+        text: editingVideoId
+          ? "대표 공연 영상을 수정했습니다."
+          : "대표 공연 영상을 등록했습니다.",
+      });
+      setEditingVideoId(null);
       setFormValues({
         title: "",
         sourceUrl: "",
         category: entry.category,
-      });
-      setCurrentVideoIndex(0);
-      setFormStatus({
-        type: "success",
-        text: "대표 공연 영상을 등록했습니다.",
+        isHomeFeatured: false,
       });
     } catch (saveError) {
       setFormStatus({
@@ -111,11 +142,26 @@ function Videos({ isAdmin }) {
         text:
           saveError instanceof Error
             ? saveError.message
-            : "대표 공연 영상을 등록하지 못했습니다.",
+            : editingVideoId
+              ? "대표 공연 영상을 수정하지 못했습니다."
+              : "대표 공연 영상을 등록하지 못했습니다.",
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleStartEdit = (entry) => {
+    setEditingVideoId(entry.id);
+    setFormStatus(null);
+    setSelectedCategory(entry.category);
+    setSelectedVideoId(entry.id);
+    setFormValues({
+      title: entry.title,
+      sourceUrl: entry.sourceUrl,
+      category: entry.category,
+      isHomeFeatured: entry.isHomeFeatured,
+    });
   };
 
   const handleDeleteVideo = async () => {
@@ -132,6 +178,11 @@ function Videos({ isAdmin }) {
         currentEntries.filter((entry) => entry.id !== videoToDelete.id)
       );
       markLiveData();
+
+      if (editingVideoId === videoToDelete.id) {
+        resetVideoForm();
+      }
+
       setFormStatus({
         type: "success",
         text: "대표 공연 영상을 삭제했습니다.",
@@ -202,38 +253,60 @@ function Videos({ isAdmin }) {
                 대표 공연 영상을 불러오는 중입니다.
               </div>
             ) : activeVideo ? (
-              <div className="home-video-card videos-main-card">
-                <div className="video-frame">
-                  <iframe
-                    key={activeVideo.id}
-                    src={activeVideo.embedUrl}
-                    title={activeVideo.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+              <>
+                <div className="home-video-card videos-main-card">
+                  <div className="video-frame">
+                    <iframe
+                      key={activeVideo.id}
+                      src={activeVideo.embedUrl}
+                      title={activeVideo.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+
+                  <div className="video-info">
+                    <div className="home-video-title-row">
+                      <div className="videos-title-block">
+                        <div className="videos-badge-row">
+                          <span className="videos-category-badge">
+                            {getHomeVideoCategoryLabel(activeVideo.category)}
+                          </span>
+                          {activeVideo.isHomeFeatured ? (
+                            <span className="videos-home-badge">홈페이지 표시 중</span>
+                          ) : null}
+                        </div>
+                        <h3>{activeVideo.title}</h3>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="video-info">
-                  <div className="home-video-title-row">
-                    <div className="videos-title-block">
-                      <span className="videos-category-badge">
-                        {getHomeVideoCategoryLabel(activeVideo.category)}
-                      </span>
-                      <h3>{activeVideo.title}</h3>
-                    </div>
-                    {filteredEntries.length > 1 ? (
-                      <span className="home-video-rotation-badge">
-                        {activeVideoIndex + 1} / {filteredEntries.length}
-                      </span>
-                    ) : null}
+                {filteredEntries.length > 1 ? (
+                  <div className="videos-picker-list">
+                    {filteredEntries.map((entry) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        className={`videos-picker-item${
+                          activeVideo.id === entry.id ? " is-active" : ""
+                        }`}
+                        onClick={() => setSelectedVideoId(entry.id)}
+                      >
+                        <div className="videos-badge-row">
+                          <span className="videos-category-badge">
+                            {getHomeVideoCategoryLabel(entry.category)}
+                          </span>
+                          {entry.isHomeFeatured ? (
+                            <span className="videos-home-badge">홈페이지 표시 중</span>
+                          ) : null}
+                        </div>
+                        <strong>{entry.title}</strong>
+                      </button>
+                    ))}
                   </div>
-                  <p>
-                    {filteredEntries.length > 1
-                      ? "선택한 탭의 영상을 5초 간격으로 번갈아 보여주고 있습니다."
-                      : "선택한 탭에 등록된 대표 공연 영상입니다."}
-                  </p>
-                </div>
-              </div>
+                ) : null}
+              </>
             ) : (
               <div className="guestbook-empty home-video-empty">
                 {getHomeVideoCategoryLabel(selectedCategory)} 탭에는 아직 등록된 영상이 없습니다.
@@ -306,13 +379,46 @@ function Videos({ isAdmin }) {
                 }
               />
 
+              <label className="home-video-feature-toggle" htmlFor="home-video-featured">
+                <input
+                  id="home-video-featured"
+                  type="checkbox"
+                  checked={formValues.isHomeFeatured}
+                  disabled={homeFeatureCheckboxDisabled}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      isHomeFeatured: event.target.checked,
+                    }))
+                  }
+                />
+                <span>홈페이지용 영상으로 사용</span>
+              </label>
+
+              <p className="home-video-admin-hint">
+                홈 화면에는 이 설정이 켜진 영상 1개만 표시됩니다.
+              </p>
+
+              {hasFeaturedConflict ? (
+                <p className="home-video-admin-hint is-warning">
+                  현재 "{featuredVideo.title}" 영상이 홈페이지용으로 설정되어 있어 이 옵션을 켤 수
+                  없습니다.
+                </p>
+              ) : null}
+
               <p className="home-video-admin-hint">
                 유튜브 `watch`, `youtu.be`, `shorts`, `embed` 주소를 등록할 수 있습니다.
               </p>
 
               <div className="schedule-form-actions">
                 <button type="submit" className="btn btn-dark" disabled={isSubmitting}>
-                  {isSubmitting ? "등록 중..." : "영상 등록"}
+                  {isSubmitting
+                    ? editingVideoId
+                      ? "수정 중..."
+                      : "등록 중..."
+                    : editingVideoId
+                      ? "영상 수정"
+                      : "영상 등록"}
                 </button>
                 <button
                   type="button"
@@ -320,7 +426,7 @@ function Videos({ isAdmin }) {
                   onClick={resetVideoForm}
                   disabled={isSubmitting}
                 >
-                  입력 초기화
+                  {editingVideoId ? "편집 취소" : "입력 초기화"}
                 </button>
               </div>
             </form>
@@ -334,9 +440,14 @@ function Videos({ isAdmin }) {
                 homeVideoEntries.map((entry) => (
                   <article className="home-video-admin-item" key={entry.id}>
                     <div className="home-video-admin-item-text">
-                      <span className="videos-category-badge">
-                        {getHomeVideoCategoryLabel(entry.category)}
-                      </span>
+                      <div className="videos-badge-row">
+                        <span className="videos-category-badge">
+                          {getHomeVideoCategoryLabel(entry.category)}
+                        </span>
+                        {entry.isHomeFeatured ? (
+                          <span className="videos-home-badge">홈페이지 표시 중</span>
+                        ) : null}
+                      </div>
                       <strong>{entry.title}</strong>
                       <a
                         href={entry.sourceUrl}
@@ -347,14 +458,25 @@ function Videos({ isAdmin }) {
                         {entry.sourceUrl}
                       </a>
                     </div>
-                    <button
-                      type="button"
-                      className="btn btn-light home-video-delete-button"
-                      disabled={isSubmitting || isFallbackData}
-                      onClick={() => setVideoToDelete(entry)}
-                    >
-                      삭제
-                    </button>
+
+                    <div className="home-video-admin-actions">
+                      <button
+                        type="button"
+                        className="btn btn-light home-video-delete-button"
+                        disabled={isSubmitting}
+                        onClick={() => handleStartEdit(entry)}
+                      >
+                        편집
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-light home-video-delete-button"
+                        disabled={isSubmitting || isFallbackData}
+                        onClick={() => setVideoToDelete(entry)}
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </article>
                 ))
               ) : (

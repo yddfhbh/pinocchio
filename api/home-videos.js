@@ -42,6 +42,7 @@ function normalizeVideoInput(body) {
     title,
     sourceUrl,
     category,
+    isHomeFeatured: body?.isHomeFeatured === true,
     embedUrl: toHomeVideoEmbedUrl(sourceUrl),
   };
 }
@@ -52,7 +53,41 @@ function toEntry(row) {
     title: row.title,
     sourceUrl: row.source_url,
     category: normalizeHomeVideoCategory(row.category || DEFAULT_HOME_VIDEO_CATEGORY),
+    isHomeFeatured: row.is_home_featured === true,
   };
+}
+
+async function findHomeFeaturedConflict(excludedId = null) {
+  const params = [];
+  let whereClause = "WHERE is_home_featured = TRUE";
+
+  if (excludedId !== null) {
+    params.push(excludedId);
+    whereClause += ` AND id <> $${params.length}`;
+  }
+
+  const result = await query(
+    `SELECT id, title
+     FROM home_videos
+     ${whereClause}
+     LIMIT 1`,
+    params
+  );
+
+  return result.rows[0] || null;
+}
+
+function parseVideoId(value) {
+  const parsed = Number.parseInt(String(value ?? ""), 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function featuredConflictMessage(conflictRow) {
+  return `"${conflictRow.title}" 영상이 이미 홈페이지용으로 설정되어 있습니다. 먼저 해당 영상을 해제해 주세요.`;
+}
+
+function isHomeFeaturedUniqueError(error) {
+  return error && typeof error === "object" && error.code === "23505";
 }
 
 export default async function handler(request, response) {
@@ -61,9 +96,9 @@ export default async function handler(request, response) {
       await ensureHomeVideosTable();
 
       const result = await query(
-        `SELECT id, title, source_url, category
+        `SELECT id, title, source_url, category, is_home_featured
          FROM home_videos
-         ORDER BY created_at ASC, id ASC`
+         ORDER BY is_home_featured DESC, created_at ASC, id ASC`
       );
 
       return sendJson(response, 200, {
@@ -88,7 +123,9 @@ export default async function handler(request, response) {
     try {
       await ensureHomeVideosTable();
 
-      const { title, sourceUrl, category, embedUrl } = normalizeVideoInput(await readBody(request));
+      const { title, sourceUrl, category, isHomeFeatured, embedUrl } = normalizeVideoInput(
+        await readBody(request)
+      );
 
       if (!title || !sourceUrl) {
         return sendJson(response, 400, {
@@ -102,20 +139,107 @@ export default async function handler(request, response) {
         });
       }
 
+      if (isHomeFeatured) {
+        const conflictRow = await findHomeFeaturedConflict();
+
+        if (conflictRow) {
+          return sendJson(response, 409, {
+            error: featuredConflictMessage(conflictRow),
+          });
+        }
+      }
+
       const result = await query(
-        `INSERT INTO home_videos (title, source_url, category)
-         VALUES ($1, $2, $3)
-         RETURNING id, title, source_url, category`,
-        [title, sourceUrl, category]
+        `INSERT INTO home_videos (title, source_url, category, is_home_featured)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, title, source_url, category, is_home_featured`,
+        [title, sourceUrl, category, isHomeFeatured]
       );
 
       return sendJson(response, 201, {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
+      if (isHomeFeaturedUniqueError(error)) {
+        return sendJson(response, 409, {
+          error: "이미 다른 영상이 홈페이지용으로 설정되어 있습니다. 먼저 해당 영상을 해제해 주세요.",
+        });
+      }
+
       return sendJson(response, 500, {
         error:
           error instanceof Error ? error.message : "대표 공연 영상을 등록하지 못했습니다.",
+      });
+    }
+  }
+
+  if (request.method === "PATCH") {
+    try {
+      await ensureHomeVideosTable();
+
+      const body = await readBody(request);
+      const id = parseVideoId(body?.id);
+
+      if (id === null) {
+        return sendJson(response, 400, {
+          error: "수정할 영상을 선택해 주세요.",
+        });
+      }
+
+      const { title, sourceUrl, category, isHomeFeatured, embedUrl } = normalizeVideoInput(body);
+
+      if (!title || !sourceUrl) {
+        return sendJson(response, 400, {
+          error: "영상 제목과 URL을 모두 입력해 주세요.",
+        });
+      }
+
+      if (!embedUrl) {
+        return sendJson(response, 400, {
+          error: "유튜브 영상 주소만 등록할 수 있습니다.",
+        });
+      }
+
+      if (isHomeFeatured) {
+        const conflictRow = await findHomeFeaturedConflict(id);
+
+        if (conflictRow) {
+          return sendJson(response, 409, {
+            error: featuredConflictMessage(conflictRow),
+          });
+        }
+      }
+
+      const result = await query(
+        `UPDATE home_videos
+         SET title = $1,
+             source_url = $2,
+             category = $3,
+             is_home_featured = $4
+         WHERE id = $5
+         RETURNING id, title, source_url, category, is_home_featured`,
+        [title, sourceUrl, category, isHomeFeatured, id]
+      );
+
+      if (!result.rows.length) {
+        return sendJson(response, 404, {
+          error: "수정할 영상을 찾지 못했습니다.",
+        });
+      }
+
+      return sendJson(response, 200, {
+        entry: toEntry(result.rows[0]),
+      });
+    } catch (error) {
+      if (isHomeFeaturedUniqueError(error)) {
+        return sendJson(response, 409, {
+          error: "이미 다른 영상이 홈페이지용으로 설정되어 있습니다. 먼저 해당 영상을 해제해 주세요.",
+        });
+      }
+
+      return sendJson(response, 500, {
+        error:
+          error instanceof Error ? error.message : "대표 공연 영상을 수정하지 못했습니다.",
       });
     }
   }
@@ -125,9 +249,9 @@ export default async function handler(request, response) {
       await ensureHomeVideosTable();
 
       const body = await readBody(request);
-      const id = Number.parseInt(String(body?.id ?? ""), 10);
+      const id = parseVideoId(body?.id);
 
-      if (!Number.isFinite(id)) {
+      if (id === null) {
         return sendJson(response, 400, {
           error: "삭제할 영상을 선택해 주세요.",
         });
@@ -157,7 +281,7 @@ export default async function handler(request, response) {
     }
   }
 
-  response.setHeader("Allow", "GET, POST, DELETE");
+  response.setHeader("Allow", "GET, POST, PATCH, DELETE");
   return sendJson(response, 405, {
     error: "허용하지 않는 요청 방식입니다.",
   });

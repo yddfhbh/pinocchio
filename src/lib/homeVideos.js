@@ -19,6 +19,7 @@ export const DEFAULT_HOME_VIDEO_ENTRIES = [
     title: "Where is BLUE (김푸른 리사이틀) 1부",
     sourceUrl: "https://www.youtube.com/watch?v=bZxeSLM4TWs",
     category: DEFAULT_HOME_VIDEO_CATEGORY,
+    isHomeFeatured: true,
   },
 ];
 
@@ -121,6 +122,7 @@ function normalizeHomeVideoEntry(entry, index) {
     sourceUrl,
     embedUrl,
     category,
+    isHomeFeatured: entry.isHomeFeatured === true,
   };
 }
 
@@ -164,6 +166,20 @@ export async function saveHomeVideoEntry(entry) {
   });
 
   const payload = await parseApiResponse(response, "대표 공연 영상을 등록하지 못했습니다.");
+
+  return normalizeHomeVideoEntries([payload.entry])[0];
+}
+
+export async function updateHomeVideoEntry(id, entry) {
+  const response = await fetch("/api/home-videos", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id, ...entry }),
+  });
+
+  const payload = await parseApiResponse(response, "대표 공연 영상을 수정하지 못했습니다.");
 
   return normalizeHomeVideoEntries([payload.entry])[0];
 }

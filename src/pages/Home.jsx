@@ -21,7 +21,7 @@ function Home() {
     error: homeVideoError,
     isLoading: isHomeVideoLoading,
   } = useHomeVideos();
-  const activeVideo = homeVideoEntries[0] || null;
+  const activeVideo = homeVideoEntries.find((entry) => entry.isHomeFeatured) || null;
 
   return (
     <div>
@@ -127,7 +127,7 @@ function Home() {
               </div>
             ) : (
               <div className="guestbook-empty home-video-empty">
-                등록된 대표 공연 영상이 없습니다.
+                홈페이지용으로 설정된 대표 공연 영상이 없습니다.
               </div>
             )}
           </div>
