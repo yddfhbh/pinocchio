@@ -332,6 +332,7 @@ a {
 
 .about-page-title .page-description {
   max-width: none;
+  margin-bottom: 20px;
 }
 
 .about-admin-toggle {
