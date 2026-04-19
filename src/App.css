@@ -887,6 +887,7 @@ a {
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+  align-self: flex-end;
 }
 
 .scores-page-title {
@@ -1929,6 +1930,10 @@ a {
   .home-video-admin-actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .scores-page-actions {
+    align-self: stretch;
   }
 
   .home-video-delete-button {
