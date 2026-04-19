@@ -1,10 +1,11 @@
-function DialogFrame({
+export function DialogFrame({
   open,
   title,
   message,
   children,
   actions,
   onClose,
+  className = "",
 }) {
   if (!open) {
     return null;
@@ -13,7 +14,7 @@ function DialogFrame({
   return (
     <div className="dialog-backdrop" role="presentation" onClick={onClose}>
       <div
-        className="dialog-card"
+        className={`dialog-card${className ? ` ${className}` : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -27,7 +28,7 @@ function DialogFrame({
         </div>
         {message ? <p className="dialog-message">{message}</p> : null}
         {children}
-        <div className="dialog-actions">{actions}</div>
+        {actions ? <div className="dialog-actions">{actions}</div> : null}
       </div>
     </div>
   );

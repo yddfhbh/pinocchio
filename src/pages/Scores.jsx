@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ConfirmDialog } from "../components/Dialog";
+import { ConfirmDialog, DialogFrame } from "../components/Dialog";
 import useScoreEntries from "../hooks/useScoreEntries";
 import {
   deleteScoreEntry,
@@ -46,6 +46,7 @@ function Scores({ isAdmin }) {
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [entryToDelete, setEntryToDelete] = useState(null);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
 
   const categories = useMemo(() => {
     const uniqueCategories = Array.from(
@@ -94,6 +95,22 @@ function Scores({ isAdmin }) {
     setUploadProgress(null);
   };
 
+  const openCreateForm = () => {
+    resetForm();
+    setFormStatus(null);
+    setIsFormDialogOpen(true);
+  };
+
+  const closeFormDialog = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    resetForm();
+    setFormStatus(null);
+    setIsFormDialogOpen(false);
+  };
+
   const handleEdit = (entry) => {
     setFormMode("edit");
     setFormValues({
@@ -113,6 +130,7 @@ function Scores({ isAdmin }) {
     setUploadFile(null);
     setUploadProgress(null);
     setFormStatus(null);
+    setIsFormDialogOpen(true);
   };
 
   const handleSave = async (event) => {
@@ -175,6 +193,7 @@ function Scores({ isAdmin }) {
         return normalizeScoreEntries(nextEntries);
       });
       setSelectedId(entry.id);
+      setIsFormDialogOpen(false);
       resetForm();
       setFormStatus({
         type: "success",
@@ -209,6 +228,7 @@ function Scores({ isAdmin }) {
       );
 
       if (formValues.id === entryToDelete.id) {
+        setIsFormDialogOpen(false);
         resetForm();
       }
 
@@ -239,7 +259,12 @@ function Scores({ isAdmin }) {
               수 있습니다.
             </p>
           </div>
-          {isAdmin ? <span className="scores-admin-chip">관리자 편집 가능</span> : null}
+          <div className="scores-page-actions">
+            <button type="button" className="btn btn-dark scores-register-button" onClick={openCreateForm}>
+              악보 등록
+            </button>
+            {isAdmin ? <span className="scores-admin-chip">관리자 편집 가능</span> : null}
+          </div>
         </div>
 
         {error ? (
@@ -284,6 +309,11 @@ function Scores({ isAdmin }) {
           <span>{filteredEntries.length}개 악보</span>
           {selectedEntry ? <span>최근 수정 {formatScoreDate(selectedEntry.updatedAt)}</span> : null}
         </div>
+        {formStatus ? (
+          <p className={`guestbook-status scores-status-message is-${formStatus.type}`}>
+            {formStatus.text}
+          </p>
+        ) : null}
 
         <div className="scores-page-layout">
           <div className="scores-library-panel">
@@ -428,263 +458,268 @@ function Scores({ isAdmin }) {
                 </div>
               )}
             </div>
-
-            <div className="scores-admin-panel">
-                <div className="scores-library-head">
-                  <h3>{formMode === "edit" ? "악보 수정" : "악보 등록"}</h3>
-                  <span>
-                    일반 유저도 등록할 수 있고, 수정과 삭제는 관리자만 가능합니다.
-                  </span>
-                </div>
-
-                <form className="scores-admin-form" onSubmit={handleSave}>
-                  <label className="guestbook-label" htmlFor="score-title">
-                    곡명
-                  </label>
-                  <input
-                    id="score-title"
-                    type="text"
-                    maxLength={120}
-                    placeholder="예: Libertango"
-                    value={formValues.title}
-                    onChange={(event) =>
-                      setFormValues((current) => ({
-                        ...current,
-                        title: event.target.value,
-                      }))
-                    }
-                    required
-                  />
-
-                  <div className="scores-form-grid">
-                    <div>
-                      <label className="guestbook-label" htmlFor="score-composer">
-                        작곡
-                      </label>
-                      <input
-                        id="score-composer"
-                        type="text"
-                        maxLength={80}
-                        placeholder="작곡가 이름"
-                        value={formValues.composer}
-                        onChange={(event) =>
-                          setFormValues((current) => ({
-                            ...current,
-                            composer: event.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <label className="guestbook-label" htmlFor="score-arranger">
-                        편곡
-                      </label>
-                      <input
-                        id="score-arranger"
-                        type="text"
-                        maxLength={80}
-                        placeholder="편곡자 또는 출처"
-                        value={formValues.arranger}
-                        onChange={(event) =>
-                          setFormValues((current) => ({
-                            ...current,
-                            arranger: event.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="scores-form-grid">
-                    <div>
-                      <label className="guestbook-label" htmlFor="score-category">
-                        분류
-                      </label>
-                      <select
-                        id="score-category"
-                        value={formValues.category}
-                        onChange={(event) =>
-                          setFormValues((current) => ({
-                            ...current,
-                            category: event.target.value,
-                          }))
-                        }
-                      >
-                        {scoreCategoryOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="guestbook-label" htmlFor="score-difficulty">
-                        난이도
-                      </label>
-                      <select
-                        id="score-difficulty"
-                        value={formValues.difficulty}
-                        onChange={(event) =>
-                          setFormValues((current) => ({
-                            ...current,
-                            difficulty: event.target.value,
-                          }))
-                        }
-                      >
-                        {difficultyOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <label className="guestbook-label" htmlFor="score-instrumentation">
-                    편성
-                  </label>
-                  <input
-                    id="score-instrumentation"
-                    type="text"
-                    maxLength={60}
-                    placeholder="예: Flute Trio / Solo Flute"
-                    value={formValues.instrumentation}
-                    onChange={(event) =>
-                      setFormValues((current) => ({
-                        ...current,
-                        instrumentation: event.target.value,
-                      }))
-                    }
-                  />
-
-                  <label className="guestbook-label" htmlFor="score-url">
-                    외부 링크
-                  </label>
-                  <input
-                    id="score-url"
-                    type="url"
-                    placeholder="파일 업로드 대신 링크를 쓸 경우만 입력"
-                    value={formValues.sourceUrl}
-                    onChange={(event) =>
-                      setFormValues((current) => ({
-                        ...current,
-                        sourceUrl: event.target.value,
-                      }))
-                    }
-                  />
-
-                  <label className="guestbook-label" htmlFor="score-file">
-                    PDF 파일 업로드
-                  </label>
-                  <input
-                    id="score-file"
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    disabled={isSubmitting}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0] || null;
-                      setUploadFile(file);
-                      setUploadProgress(
-                        file
-                          ? {
-                              loaded: 0,
-                              total: file.size,
-                              percentage: 0,
-                            }
-                          : null
-                      );
-                    }}
-                  />
-                  <p className="scores-admin-hint">
-                    Vercel Blob 업로드는 현재 10MB 이하 PDF 기준으로 연결했습니다.
-                    {uploadFile
-                      ? ` 선택한 파일: ${uploadFile.name} (${formatScoreFileSize(uploadFile.size)})`
-                      : " 파일을 올리면 자동으로 저장소 링크가 생성됩니다."}
-                  </p>
-                  {uploadFile && uploadProgress ? (
-                    <div
-                      className="scores-upload-progress"
-                      aria-live="polite"
-                      aria-label="PDF upload progress"
-                    >
-                      <div className="scores-upload-progress-head">
-                        <strong>{isSubmitting ? "PDF 업로드 진행률" : "업로드 준비됨"}</strong>
-                        <span>{Math.round(uploadProgress.percentage)}%</span>
-                      </div>
-                      <div className="scores-upload-progress-bar" aria-hidden="true">
-                        <span
-                          className="scores-upload-progress-fill"
-                          style={{ width: `${Math.min(uploadProgress.percentage, 100)}%` }}
-                        ></span>
-                      </div>
-                      <p className="scores-upload-progress-text">
-                        {formatScoreFileSize(uploadProgress.loaded)} /{" "}
-                        {formatScoreFileSize(uploadProgress.total)}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  <label className="guestbook-label" htmlFor="score-description">
-                    메모
-                  </label>
-                  <textarea
-                    id="score-description"
-                    rows="4"
-                    maxLength={500}
-                    placeholder="연습 포인트나 사용 목적을 적어 주세요."
-                    value={formValues.description}
-                    onChange={(event) =>
-                      setFormValues((current) => ({
-                        ...current,
-                        description: event.target.value,
-                      }))
-                    }
-                  ></textarea>
-
-                  <p className="scores-admin-hint">
-                    파일을 업로드하면 Blob URL이 저장되고, 링크만 입력하면 외부 악보 자료도 함께
-                    보관할 수 있습니다.
-                  </p>
-
-                  <div className="schedule-form-actions">
-                    <button
-                      type="submit"
-                      className="btn btn-dark"
-                      disabled={isSubmitting || !!error}
-                    >
-                      {isSubmitting
-                        ? uploadFile
-                          ? "업로드 중.."
-                          : "저장 중.."
-                        : formMode === "edit"
-                          ? "악보 수정"
-                          : "악보 등록"}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-light"
-                      onClick={resetForm}
-                      disabled={isSubmitting}
-                    >
-                      새 항목 작성
-                    </button>
-                  </div>
-
-                  {!isAdmin ? (
-                    <p className="scores-admin-hint">
-                      등록한 항목의 수정과 삭제는 관리자에게 요청해 주세요.
-                    </p>
-                  ) : null}
-
-                  {formStatus ? (
-                    <p className={`guestbook-status is-${formStatus.type}`}>{formStatus.text}</p>
-                  ) : null}
-                </form>
-              </div>
           </div>
         </div>
+
+        <DialogFrame
+          open={isFormDialogOpen}
+          title={formMode === "edit" ? "악보 수정" : "악보 등록"}
+          message={
+            formMode === "edit"
+              ? "등록된 악보 정보를 수정합니다."
+              : "일반 유저도 등록할 수 있고, 수정과 삭제는 관리자만 가능합니다."
+          }
+          className="dialog-card-wide"
+          onClose={closeFormDialog}
+        >
+          <form className="scores-admin-form" onSubmit={handleSave}>
+            <label className="guestbook-label" htmlFor="score-title">
+              곡명
+            </label>
+            <input
+              id="score-title"
+              type="text"
+              maxLength={120}
+              placeholder="예: Libertango"
+              value={formValues.title}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }))
+              }
+              required
+            />
+
+            <div className="scores-form-grid">
+              <div>
+                <label className="guestbook-label" htmlFor="score-composer">
+                  작곡
+                </label>
+                <input
+                  id="score-composer"
+                  type="text"
+                  maxLength={80}
+                  placeholder="작곡가 이름"
+                  value={formValues.composer}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      composer: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="guestbook-label" htmlFor="score-arranger">
+                  편곡
+                </label>
+                <input
+                  id="score-arranger"
+                  type="text"
+                  maxLength={80}
+                  placeholder="편곡자 또는 출처"
+                  value={formValues.arranger}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      arranger: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="scores-form-grid">
+              <div>
+                <label className="guestbook-label" htmlFor="score-category">
+                  분류
+                </label>
+                <select
+                  id="score-category"
+                  value={formValues.category}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      category: event.target.value,
+                    }))
+                  }
+                >
+                  {scoreCategoryOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="guestbook-label" htmlFor="score-difficulty">
+                  난이도
+                </label>
+                <select
+                  id="score-difficulty"
+                  value={formValues.difficulty}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      difficulty: event.target.value,
+                    }))
+                  }
+                >
+                  {difficultyOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <label className="guestbook-label" htmlFor="score-instrumentation">
+              편성
+            </label>
+            <input
+              id="score-instrumentation"
+              type="text"
+              maxLength={60}
+              placeholder="예: Flute Trio / Solo Flute"
+              value={formValues.instrumentation}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  instrumentation: event.target.value,
+                }))
+              }
+            />
+
+            <label className="guestbook-label" htmlFor="score-url">
+              외부 링크
+            </label>
+            <input
+              id="score-url"
+              type="url"
+              placeholder="파일 업로드 대신 링크를 쓸 경우만 입력"
+              value={formValues.sourceUrl}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  sourceUrl: event.target.value,
+                }))
+              }
+            />
+
+            <label className="guestbook-label" htmlFor="score-file">
+              PDF 파일 업로드
+            </label>
+            <input
+              id="score-file"
+              type="file"
+              accept="application/pdf,.pdf"
+              disabled={isSubmitting}
+              onChange={(event) => {
+                const file = event.target.files?.[0] || null;
+                setUploadFile(file);
+                setUploadProgress(
+                  file
+                    ? {
+                        loaded: 0,
+                        total: file.size,
+                        percentage: 0,
+                      }
+                    : null
+                );
+              }}
+            />
+            <p className="scores-admin-hint">
+              Vercel Blob 업로드는 현재 10MB 이하 PDF 기준으로 연결했습니다.
+              {uploadFile
+                ? ` 선택한 파일: ${uploadFile.name} (${formatScoreFileSize(uploadFile.size)})`
+                : " 파일을 올리면 자동으로 저장소 링크가 생성됩니다."}
+            </p>
+            {uploadFile && uploadProgress ? (
+              <div
+                className="scores-upload-progress"
+                aria-live="polite"
+                aria-label="PDF upload progress"
+              >
+                <div className="scores-upload-progress-head">
+                  <strong>{isSubmitting ? "PDF 업로드 진행률" : "업로드 준비됨"}</strong>
+                  <span>{Math.round(uploadProgress.percentage)}%</span>
+                </div>
+                <div className="scores-upload-progress-bar" aria-hidden="true">
+                  <span
+                    className="scores-upload-progress-fill"
+                    style={{ width: `${Math.min(uploadProgress.percentage, 100)}%` }}
+                  ></span>
+                </div>
+                <p className="scores-upload-progress-text">
+                  {formatScoreFileSize(uploadProgress.loaded)} /{" "}
+                  {formatScoreFileSize(uploadProgress.total)}
+                </p>
+              </div>
+            ) : null}
+
+            <label className="guestbook-label" htmlFor="score-description">
+              메모
+            </label>
+            <textarea
+              id="score-description"
+              rows="4"
+              maxLength={500}
+              placeholder="연습 포인트나 사용 목적을 적어 주세요."
+              value={formValues.description}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }
+            ></textarea>
+
+            <p className="scores-admin-hint">
+              파일을 업로드하면 Blob URL이 저장되고, 링크만 입력하면 외부 악보 자료도 함께
+              보관할 수 있습니다.
+            </p>
+
+            <div className="schedule-form-actions">
+              {formMode === "edit" ? (
+                <button
+                  type="button"
+                  className="btn btn-light"
+                  onClick={openCreateForm}
+                  disabled={isSubmitting}
+                >
+                  새로 등록
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={closeFormDialog}
+                disabled={isSubmitting}
+              >
+                닫기
+              </button>
+              <button type="submit" className="btn btn-dark" disabled={isSubmitting || !!error}>
+                {isSubmitting
+                  ? uploadFile
+                    ? "업로드 중..."
+                    : "저장 중..."
+                  : formMode === "edit"
+                    ? "악보 수정"
+                    : "악보 등록"}
+              </button>
+            </div>
+
+            {!isAdmin ? (
+              <p className="scores-admin-hint">
+                등록한 항목의 수정과 삭제는 관리자에게 요청해 주세요.
+              </p>
+            ) : null}
+          </form>
+        </DialogFrame>
 
         <ConfirmDialog
           open={!!entryToDelete}
