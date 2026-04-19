@@ -30,12 +30,12 @@ function Home() {
           <div className="hero-left">
             <span className="badge">Welcome to PINOCCHIO</span>
             <h1>
-              우리의 연주를 기록하는
+              부산대학교
               <br />
-              피노키오 동아리 아카이브
+              팬플룻 동아리 피노키오
             </h1>
             <p className="hero-text">
-              악보 보관, 공연 영상 모음, 동아리 일정 관리, 그리고 추억이 쌓이는
+              악보, 공연 영상, 동아리 일정, 그리고
               방명록까지 한곳에서 확인할 수 있습니다.
             </p>
 
@@ -94,7 +94,7 @@ function Home() {
           <div className="media-column">
             <div className="section-title-wrap">
               <h2>대표 공연 영상</h2>
-              <p>메인 페이지에서 바로 볼 수 있는 대표 공연 영상입니다.</p>
+              <p>피노키오에서 진행한 가장 최근 공연 입니다.</p>
             </div>
 
             {homeVideoError ? (
@@ -135,7 +135,7 @@ function Home() {
           <div className="guestbook-column">
             <div className="section-title-wrap">
               <h2>방명록</h2>
-              <p>최근 방문자들의 메시지를 바로 확인할 수 있습니다.</p>
+              <p>최근 방문자들의 메시지를 확인할 수 있습니다.</p>
             </div>
 
             <div className="guestbook-preview-card guestbook-side-card">
