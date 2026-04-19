@@ -419,18 +419,19 @@ function Schedule({ isAdmin }) {
               )}
             </div>
 
-            <div className="schedule-panel">
+            {isAdmin ? (
+              <div className="schedule-panel">
               <div className="schedule-panel-head">
                 <h3>일정 편집</h3>
                 {isAdmin ? <span>수정 가능</span> : <span>관리자 전용</span>}
               </div>
 
-              {!isAdmin ? (
-                <div className="guestbook-empty schedule-admin-empty">
+              
+                {false ? <div className="guestbook-empty schedule-admin-empty">
                   헤더의 방명록 옆 관리자 버튼으로 로그인하면 이곳에서 일정을 수정할
                   수 있습니다.
-                </div>
-              ) : (
+                </div> : null}
+              
                 <div className="schedule-admin-area">
                   <form className="schedule-admin-form" onSubmit={handleSave}>
                     <label className="guestbook-label" htmlFor="schedule-title">
@@ -630,8 +631,9 @@ function Schedule({ isAdmin }) {
                     ) : null}
                   </form>
                 </div>
-              )}
-            </div>
+              
+              </div>
+            ) : null}
           </div>
         </div>
         <ConfirmDialog
