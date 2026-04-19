@@ -9,7 +9,7 @@ function getFallbackEntries(limit) {
 }
 
 function useScheduleEntries(limit) {
-  const [entries, setEntries] = useState(() => getFallbackEntries(limit));
+  const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 

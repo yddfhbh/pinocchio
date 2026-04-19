@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DEFAULT_SCORE_ENTRIES, fetchScoreEntries } from "../lib/scores";
 
 function useScoreEntries() {
-  const [entries, setEntries] = useState(DEFAULT_SCORE_ENTRIES);
+  const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
