@@ -4,6 +4,7 @@ import { Pool } from "pg";
 let pool;
 let guestbookInitPromise;
 let scheduleInitPromise;
+let scoreInitPromise;
 let homeVideoInitPromise;
 let aboutContentInitPromise;
 
@@ -125,6 +126,74 @@ export async function ensureScheduleTable() {
   }
 
   return scheduleInitPromise;
+}
+
+export async function ensureScoreTable() {
+  if (!scoreInitPromise) {
+    scoreInitPromise = (async () => {
+      await query(
+        `CREATE TABLE IF NOT EXISTS score_entries (
+          id BIGSERIAL PRIMARY KEY,
+          title VARCHAR(120) NOT NULL,
+          composer VARCHAR(80),
+          arranger VARCHAR(80),
+          category VARCHAR(30),
+          instrumentation VARCHAR(60),
+          difficulty VARCHAR(20),
+          description TEXT,
+          source_url TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`
+      );
+
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS composer VARCHAR(80)`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS arranger VARCHAR(80)`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS category VARCHAR(30)`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS instrumentation VARCHAR(60)`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS difficulty VARCHAR(20)`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS description TEXT`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS source_url TEXT`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS file_name VARCHAR(180)`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS file_size BIGINT`
+      );
+      await query(
+        `ALTER TABLE score_entries
+         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
+      );
+    })().catch((error) => {
+      scoreInitPromise = null;
+      throw error;
+    });
+  }
+
+  return scoreInitPromise;
 }
 
 export async function ensureHomeVideosTable() {

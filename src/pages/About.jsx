@@ -131,7 +131,7 @@ function About({ isAdmin }) {
             <div className="schedule-admin-area">
               <form className="schedule-admin-form" onSubmit={handleSubmit}>
                 <p className="schedule-field-hint">
-                  동아리 소개 수정중.
+                  동아리 소개 수정중...
                 </p>
 
                 <label className="guestbook-label" htmlFor="about-intro">

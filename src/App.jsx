@@ -26,7 +26,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About isAdmin={adminSession.isAdmin} />} />
-          <Route path="/scores" element={<Scores />} />
+          <Route path="/scores" element={<Scores isAdmin={adminSession.isAdmin} />} />
           <Route path="/videos" element={<Videos isAdmin={adminSession.isAdmin} />} />
           <Route path="/schedule" element={<Schedule isAdmin={adminSession.isAdmin} />} />
           <Route path="/guestbook" element={<Guestbook isAdmin={adminSession.isAdmin} />} />
