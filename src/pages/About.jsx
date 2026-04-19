@@ -1,33 +1,244 @@
-function About() {
+import { useEffect, useState } from "react";
+import useAboutContent from "../hooks/useAboutContent";
+import {
+  ABOUT_CONTENT_ITEM_LIMIT,
+  ABOUT_CONTENT_LIST_LIMIT,
+  ABOUT_CONTENT_TEXT_LIMIT,
+  ABOUT_CONTENT_TITLE_LIMIT,
+  updateAboutContent,
+} from "../lib/aboutContent";
+
+function toFormValues(content) {
+  return {
+    intro: content.intro,
+    activityTitle: content.activityTitle,
+    activities: content.activities.join("\n"),
+    websiteTitle: content.websiteTitle,
+    websiteItems: content.websiteItems.join("\n"),
+  };
+}
+
+function parseListInput(value) {
+  return value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function About({ isAdmin }) {
+  const { content, setContent, isLoading, error, isFallbackData, markLiveData } =
+    useAboutContent();
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState(null);
+  const [formValues, setFormValues] = useState(() => toFormValues(content));
+
+  useEffect(() => {
+    setFormValues(toFormValues(content));
+  }, [content]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setFormStatus(null);
+    setIsSubmitting(true);
+
+    try {
+      const nextContent = await updateAboutContent({
+        intro: formValues.intro,
+        activityTitle: formValues.activityTitle,
+        activities: parseListInput(formValues.activities),
+        websiteTitle: formValues.websiteTitle,
+        websiteItems: parseListInput(formValues.websiteItems),
+      });
+
+      setContent(nextContent);
+      markLiveData();
+      setFormStatus({
+        type: "success",
+        text: "동아리 소개 내용을 저장했습니다.",
+      });
+    } catch (saveError) {
+      setFormStatus({
+        type: "error",
+        text:
+          saveError instanceof Error
+            ? saveError.message
+            : "동아리 소개 내용을 저장하지 못했습니다.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="page-section">
       <div className="container">
-        <h2>동아리 소개</h2>
-        <p className="page-description">
-          PINOCCHIO는 음악과 연주를 사랑하는 사람들이 모여
-          함께 연습하고 공연을 만들어가는 동아리입니다.
-        </p>
+        <div className="videos-page-header">
+          <div className="videos-page-title">
+            <h2>동아리 소개</h2>
+            <p className="page-description">{content.intro}</p>
+          </div>
+
+          {isAdmin ? (
+            <button
+              type="button"
+              className="btn btn-dark videos-admin-toggle"
+              onClick={() => setIsEditorOpen((current) => !current)}
+            >
+              {isEditorOpen ? "소개 편집 닫기" : "소개 편집"}
+            </button>
+          ) : null}
+        </div>
+
+        {error ? (
+          <div className="guestbook-server-note">
+            {error}
+            {isFallbackData ? " 기본 소개 문구를 먼저 보여주고 있습니다." : ""}
+          </div>
+        ) : null}
+
+        {isLoading ? (
+          <div className="guestbook-empty">동아리 소개 내용을 불러오는 중입니다.</div>
+        ) : null}
 
         <div className="info-box">
-          <h3>우리가 하는 활동</h3>
+          <h3>{content.activityTitle}</h3>
           <ul>
-            <li>정기 연습 및 합주</li>
-            <li>교내외 공연 준비</li>
-            <li>악보 공유와 파트 연습</li>
-            <li>신입 부원 모집 및 교류 활동</li>
+            {content.activities.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
           </ul>
         </div>
 
         <div className="info-box">
-          <h3>홈페이지에서 할 수 있는 것</h3>
+          <h3>{content.websiteTitle}</h3>
           <ul>
-            <li>동아리 활동 소개 보기</li>
-            <li>악보 자료 확인</li>
-            <li>공연 영상 감상</li>
-            <li>일정 확인</li>
-            <li>익명 방명록 작성</li>
+            {content.websiteItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
           </ul>
         </div>
+
+        {isAdmin && isEditorOpen ? (
+          <div className="schedule-panel">
+            <div className="schedule-panel-head">
+              <h3>소개 편집</h3>
+              <span>{isFallbackData ? "기본 내용 표시 중" : "저장 가능"}</span>
+            </div>
+
+            <div className="schedule-admin-area">
+              <form className="schedule-admin-form" onSubmit={handleSubmit}>
+                <label className="guestbook-label" htmlFor="about-intro">
+                  소개 문장
+                </label>
+                <textarea
+                  id="about-intro"
+                  rows="4"
+                  maxLength={ABOUT_CONTENT_TEXT_LIMIT}
+                  value={formValues.intro}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      intro: event.target.value,
+                    }))
+                  }
+                ></textarea>
+
+                <label className="guestbook-label" htmlFor="about-activity-title">
+                  활동 섹션 제목
+                </label>
+                <input
+                  id="about-activity-title"
+                  type="text"
+                  maxLength={ABOUT_CONTENT_TITLE_LIMIT}
+                  value={formValues.activityTitle}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      activityTitle: event.target.value,
+                    }))
+                  }
+                />
+
+                <label className="guestbook-label" htmlFor="about-activities">
+                  활동 목록
+                </label>
+                <textarea
+                  id="about-activities"
+                  rows="6"
+                  maxLength={ABOUT_CONTENT_ITEM_LIMIT * ABOUT_CONTENT_LIST_LIMIT}
+                  value={formValues.activities}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      activities: event.target.value,
+                    }))
+                  }
+                ></textarea>
+                <p className="schedule-field-hint">
+                  한 줄에 한 항목씩 입력하면 목록으로 표시됩니다. 최대 {ABOUT_CONTENT_LIST_LIMIT}개까지
+                  저장됩니다.
+                </p>
+
+                <label className="guestbook-label" htmlFor="about-website-title">
+                  홈페이지 섹션 제목
+                </label>
+                <input
+                  id="about-website-title"
+                  type="text"
+                  maxLength={ABOUT_CONTENT_TITLE_LIMIT}
+                  value={formValues.websiteTitle}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      websiteTitle: event.target.value,
+                    }))
+                  }
+                />
+
+                <label className="guestbook-label" htmlFor="about-website-items">
+                  홈페이지 목록
+                </label>
+                <textarea
+                  id="about-website-items"
+                  rows="6"
+                  maxLength={ABOUT_CONTENT_ITEM_LIMIT * ABOUT_CONTENT_LIST_LIMIT}
+                  value={formValues.websiteItems}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      websiteItems: event.target.value,
+                    }))
+                  }
+                ></textarea>
+                <p className="schedule-field-hint">
+                  빈 줄은 저장되지 않으며, 저장 후 바로 페이지 내용에 반영됩니다.
+                </p>
+
+                <div className="schedule-form-actions">
+                  <button type="submit" className="btn btn-dark" disabled={isSubmitting}>
+                    {isSubmitting ? "저장 중.." : "소개 저장"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-light"
+                    disabled={isSubmitting}
+                    onClick={() => {
+                      setFormValues(toFormValues(content));
+                      setFormStatus(null);
+                    }}
+                  >
+                    변경 취소
+                  </button>
+                </div>
+
+                {formStatus ? (
+                  <p className={`guestbook-status is-${formStatus.type}`}>{formStatus.text}</p>
+                ) : null}
+              </form>
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );

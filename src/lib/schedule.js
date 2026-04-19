@@ -200,10 +200,13 @@ export function getCategoryLabel(category) {
 export function getCalendarDays(monthDate, entries) {
   const monthStart = getMonthStart(monthDate);
   const startDay = monthStart.getDay();
+  const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+  const visibleWeeks = Math.ceil((startDay + daysInMonth) / 7);
+  const visibleDays = visibleWeeks * 7;
   const calendarStart = new Date(monthStart);
   calendarStart.setDate(monthStart.getDate() - startDay);
 
-  return Array.from({ length: 42 }, (_, index) => {
+  return Array.from({ length: visibleDays }, (_, index) => {
     const date = new Date(calendarStart);
     date.setDate(calendarStart.getDate() + index);
 

@@ -25,7 +25,7 @@ function App() {
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/about" element={<About isAdmin={adminSession.isAdmin} />} />
           <Route path="/scores" element={<Scores />} />
           <Route path="/videos" element={<Videos isAdmin={adminSession.isAdmin} />} />
           <Route path="/schedule" element={<Schedule isAdmin={adminSession.isAdmin} />} />
