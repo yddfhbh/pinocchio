@@ -279,7 +279,7 @@ a {
 }
 
 .page-section {
-  padding: 80px 0;
+  padding: 36px 0 80px;
 }
 
 .page-section h2 {
@@ -324,6 +324,40 @@ a {
 
 .videos-main-card {
   max-width: 100%;
+}
+
+.videos-category-list {
+  display: grid;
+  gap: 12px;
+  width: min(260px, 100%);
+}
+
+.videos-category-button {
+  appearance: none;
+  width: 100%;
+  padding: 18px 22px;
+  border: 1px solid #d7deea;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #111827;
+  text-align: left;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.videos-category-button:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.videos-category-button:focus {
+  outline: 2px solid #c7d2fe;
+  outline-offset: 2px;
+  border-color: #93c5fd;
 }
 
 .info-box,

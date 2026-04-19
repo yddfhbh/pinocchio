@@ -8,6 +8,8 @@ import {
   saveHomeVideoEntry,
 } from "../lib/homeVideos";
 
+const VIDEO_CATEGORY_LABELS = ["정기공연", "공개모집", "특별공연"];
+
 function Videos({ isAdmin }) {
   const {
     entries: homeVideoEntries,
@@ -143,6 +145,14 @@ function Videos({ isAdmin }) {
             대표 공연 영상을 불러오지 못해 예시 영상을 먼저 보여주고 있습니다.
           </div>
         ) : null}
+
+        <div className="videos-category-list" aria-label="공연 영상 분류">
+          {VIDEO_CATEGORY_LABELS.map((label) => (
+            <button key={label} type="button" className="videos-category-button">
+              {label}
+            </button>
+          ))}
+        </div>
 
         {isHomeVideoLoading ? (
           <div className="guestbook-empty home-video-empty">

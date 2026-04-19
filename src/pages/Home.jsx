@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useGuestbookEntries from "../hooks/useGuestbookEntries";
 import useHomeVideos from "../hooks/useHomeVideos";
@@ -22,26 +21,7 @@ function Home() {
     error: homeVideoError,
     isLoading: isHomeVideoLoading,
   } = useHomeVideos();
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-
-  useEffect(() => {
-    if (homeVideoEntries.length <= 1) {
-      return undefined;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setCurrentVideoIndex((currentIndex) => (currentIndex + 1) % homeVideoEntries.length);
-    }, 5000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [homeVideoEntries.length]);
-
-  const activeVideoIndex = homeVideoEntries.length
-    ? currentVideoIndex % homeVideoEntries.length
-    : 0;
-  const activeVideo = homeVideoEntries[activeVideoIndex] || null;
+  const activeVideo = homeVideoEntries[0] || null;
 
   return (
     <div>
@@ -142,17 +122,7 @@ function Home() {
                 <div className="video-info">
                   <div className="home-video-title-row">
                     <h3>{activeVideo.title}</h3>
-                    {homeVideoEntries.length > 1 ? (
-                      <span className="home-video-rotation-badge">
-                        {activeVideoIndex + 1} / {homeVideoEntries.length}
-                      </span>
-                    ) : null}
                   </div>
-                  <p>
-                    {homeVideoEntries.length > 1
-                      ? "등록된 대표 공연 영상을 5초 간격으로 번갈아 보여주고 있습니다."
-                      : "등록된 대표 공연 영상을 메인 페이지에서 바로 감상할 수 있습니다."}
-                  </p>
                 </div>
               </div>
             ) : (
