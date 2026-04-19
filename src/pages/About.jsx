@@ -131,7 +131,7 @@ function About({ isAdmin }) {
             <div className="schedule-admin-area">
               <form className="schedule-admin-form" onSubmit={handleSubmit}>
                 <p className="schedule-field-hint">
-                  페이지 상단 제목 "{ABOUT_PAGE_TITLE}"는 고정되어 있으며 수정되지 않습니다.
+                  동아리 소개 수정중.
                 </p>
 
                 <label className="guestbook-label" htmlFor="about-intro">
