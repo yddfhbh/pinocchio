@@ -96,6 +96,14 @@ function Scores({ isAdmin }) {
   };
 
   const openCreateForm = () => {
+    if (!isAdmin) {
+      setFormStatus({
+        type: "error",
+        text: "Admin access is required to add or edit scores.",
+      });
+      return;
+    }
+
     resetForm();
     setFormStatus(null);
     setIsFormDialogOpen(true);
@@ -136,6 +144,15 @@ function Scores({ isAdmin }) {
   const handleSave = async (event) => {
     event.preventDefault();
     setFormStatus(null);
+
+    if (!isAdmin) {
+      setFormStatus({
+        type: "error",
+        text: "Admin access is required to add or edit scores.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -260,9 +277,11 @@ function Scores({ isAdmin }) {
             </p>
           </div>
           <div className="scores-page-actions">
-            <button type="button" className="btn btn-dark scores-register-button" onClick={openCreateForm}>
+            {isAdmin ? (
+              <button type="button" className="btn btn-dark scores-register-button" onClick={openCreateForm}>
               악보 등록
-            </button>
+              </button>
+            ) : null}
             {isAdmin ? <span className="scores-admin-chip">관리자 편집 가능</span> : null}
           </div>
         </div>

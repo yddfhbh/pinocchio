@@ -4,29 +4,18 @@ import {
   createAdminSessionCookie,
   isAdminRequest,
 } from "./_auth.js";
+import { clearRateLimit, enforceRateLimit } from "./_rate-limit.js";
+import {
+  isInvalidJsonBodyError,
+  readJsonBody,
+  sendJson,
+  sendMethodNotAllowed,
+  sendServerError,
+} from "./_response.js";
 
-function sendJson(response, statusCode, payload, headers = {}) {
-  response.status(statusCode);
-  Object.entries({
-    "Content-Type": "application/json",
-    ...headers,
-  }).forEach(([name, value]) => {
-    response.setHeader(name, value);
-  });
-  response.send(JSON.stringify(payload));
-}
-
-async function readBody(request) {
-  if (request.body && typeof request.body === "object") {
-    return request.body;
-  }
-
-  if (typeof request.body === "string") {
-    return JSON.parse(request.body);
-  }
-
-  return {};
-}
+const LOGIN_RATE_LIMIT_KEY = "admin-login";
+const LOGIN_RATE_LIMIT_MAX = 5;
+const LOGIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 export default async function handler(request, response) {
   if (request.method === "GET") {
@@ -36,14 +25,29 @@ export default async function handler(request, response) {
   }
 
   if (request.method === "POST") {
-    try {
-      const body = await readBody(request);
+    if (
+      !enforceRateLimit(request, response, {
+        keyPrefix: LOGIN_RATE_LIMIT_KEY,
+        max: LOGIN_RATE_LIMIT_MAX,
+        message: "Too many admin login attempts. Please try again later.",
+        windowMs: LOGIN_RATE_LIMIT_WINDOW_MS,
+      })
+    ) {
+      return;
+    }
 
-      if (!assertAdminCode(body?.code)) {
+    try {
+      const body = await readJsonBody(request);
+
+      const code = typeof body?.code === "string" ? body.code.trim() : "";
+
+      if (!assertAdminCode(code)) {
         return sendJson(response, 401, {
           error: "관리자 코드가 올바르지 않습니다.",
         });
       }
+
+      clearRateLimit(request, LOGIN_RATE_LIMIT_KEY);
 
       return sendJson(
         response,
@@ -52,12 +56,24 @@ export default async function handler(request, response) {
         { "Set-Cookie": createAdminSessionCookie() }
       );
     } catch (error) {
-      return sendJson(response, 500, {
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "Invalid request body.",
+        });
+      }
+
+      return sendServerError(
+        response,
+        "Unable to log in with the admin code.",
+        error
+      );
+
+      /* return sendJson(response, 500, {
         error:
           error instanceof Error
             ? error.message
             : "관리자 로그인에 실패했습니다.",
-      });
+      }); */
     }
   }
 
@@ -70,8 +86,9 @@ export default async function handler(request, response) {
     );
   }
 
-  response.setHeader("Allow", "GET, POST, DELETE");
+  return sendMethodNotAllowed(response, ["GET", "POST", "DELETE"]);
+  /* response.setHeader("Allow", "GET, POST, DELETE");
   return sendJson(response, 405, {
     error: "허용되지 않은 요청 방식입니다.",
-  });
+  }); */
 }

@@ -23,6 +23,24 @@ function sanitizeConnectionString(connectionString) {
   }
 }
 
+function getSslConfiguration() {
+  const sslMode = String(process.env.POSTGRES_SSL || "require").toLowerCase();
+
+  if (sslMode === "disable") {
+    return false;
+  }
+
+  if (sslMode === "no-verify") {
+    return {
+      rejectUnauthorized: false,
+    };
+  }
+
+  return {
+    rejectUnauthorized: true,
+  };
+}
+
 function getPool() {
   const rawConnectionString =
     process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -38,12 +56,7 @@ function getPool() {
   if (!pool) {
     pool = new Pool({
       connectionString,
-      ssl:
-        process.env.POSTGRES_SSL === "disable"
-          ? false
-          : {
-              rejectUnauthorized: false,
-            },
+      ssl: getSslConfiguration(),
     });
 
     attachDatabasePool(pool);

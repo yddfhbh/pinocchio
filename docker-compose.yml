@@ -24,8 +24,8 @@ services:
     environment:
       POSTGRES_URL: ${POSTGRES_URL}
       POSTGRES_SSL: ${POSTGRES_SSL:-require}
-      ADMIN_CODE: ${ADMIN_CODE:-change-this-admin-code}
-      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-change-this-session-secret}
+      ADMIN_CODE: ${ADMIN_CODE}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET}
       BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
     volumes:
       - .:/app

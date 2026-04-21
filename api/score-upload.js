@@ -1,34 +1,71 @@
 import { handleUpload } from "@vercel/blob/client";
+import { isAdminRequest } from "./_auth.js";
+import { enforceRateLimit } from "./_rate-limit.js";
+import {
+  isInvalidJsonBodyError,
+  readJsonBody,
+  sendJson,
+  sendMethodNotAllowed,
+  sendServerError,
+} from "./_response.js";
 
 const MAX_SCORE_FILE_SIZE = 10 * 1024 * 1024;
+const UPLOAD_RATE_LIMIT_KEY = "score-upload";
+const UPLOAD_RATE_LIMIT_MAX = 10;
+const UPLOAD_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
-function sendJson(response, statusCode, payload) {
-  response.status(statusCode).setHeader("Content-Type", "application/json");
-  response.send(JSON.stringify(payload));
-}
-
-async function readBody(request) {
-  if (request.body && typeof request.body === "object") {
-    return request.body;
+function isAllowedPdfPathname(pathname) {
+  if (typeof pathname !== "string") {
+    return false;
   }
 
-  if (typeof request.body === "string") {
-    return JSON.parse(request.body);
+  const trimmedPathname = pathname.trim();
+
+  if (
+    !trimmedPathname ||
+    trimmedPathname.length > 120 ||
+    /[\\/]/.test(trimmedPathname) ||
+    /[\u0000-\u001f]/.test(trimmedPathname)
+  ) {
+    return false;
   }
 
-  return {};
+  return trimmedPathname.toLowerCase().endsWith(".pdf");
 }
 
 export default async function handler(request, response) {
   if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    return sendJson(response, 405, {
+    return sendMethodNotAllowed(response, ["POST"]);
+    /* return sendJson(response, 405, {
       error: "허용되지 않은 요청 방식입니다.",
+    }); */
+  }
+
+  if (!isAdminRequest(request)) {
+    return sendJson(response, 401, {
+      error: "Admin access is required to upload score files.",
     });
   }
 
+  if (
+    !enforceRateLimit(request, response, {
+      keyPrefix: UPLOAD_RATE_LIMIT_KEY,
+      max: UPLOAD_RATE_LIMIT_MAX,
+      message: "Too many upload attempts. Please try again later.",
+      windowMs: UPLOAD_RATE_LIMIT_WINDOW_MS,
+    })
+  ) {
+    return;
+  }
+
   try {
-    const body = await readBody(request);
+    const body = await readJsonBody(request);
+
+    if (!isAllowedPdfPathname(body?.pathname)) {
+      return sendJson(response, 400, {
+        error: "Only direct PDF filenames are allowed.",
+      });
+    }
 
     const jsonResponse = await handleUpload({
       body,
@@ -45,9 +82,21 @@ export default async function handler(request, response) {
 
     return sendJson(response, 200, jsonResponse);
   } catch (error) {
-    return sendJson(response, 400, {
+    if (isInvalidJsonBodyError(error)) {
+      return sendJson(response, 400, {
+        error: "Invalid request body.",
+      });
+    }
+
+    return sendServerError(
+      response,
+      "Unable to prepare the PDF upload.",
+      error
+    );
+
+    /* return sendJson(response, 400, {
       error:
         error instanceof Error ? error.message : "악보 PDF 업로드를 준비하지 못했습니다.",
-    });
+    }); */
   }
 }

@@ -1,6 +1,13 @@
 import { del } from "@vercel/blob";
 import { isAdminRequest } from "./_auth.js";
 import { ensureScoreTable, query } from "./_db.js";
+import {
+  isInvalidJsonBodyError,
+  readJsonBody,
+  sendJson,
+  sendMethodNotAllowed,
+  sendServerError,
+} from "./_response.js";
 
 const TITLE_LIMIT = 120;
 const SHORT_TEXT_LIMIT = 80;
@@ -8,23 +15,7 @@ const CATEGORY_LIMIT = 30;
 const INSTRUMENTATION_LIMIT = 60;
 const DIFFICULTY_LIMIT = 20;
 const DESCRIPTION_LIMIT = 500;
-
-function sendJson(response, statusCode, payload) {
-  response.status(statusCode).setHeader("Content-Type", "application/json");
-  response.send(JSON.stringify(payload));
-}
-
-async function readBody(request) {
-  if (request.body && typeof request.body === "object") {
-    return request.body;
-  }
-
-  if (typeof request.body === "string") {
-    return JSON.parse(request.body);
-  }
-
-  return {};
-}
+const MAX_SCORE_FILE_SIZE = 10 * 1024 * 1024;
 
 function normalizeText(value, limit) {
   if (typeof value !== "string") {
@@ -54,7 +45,44 @@ function normalizeUrl(value) {
   }
 }
 
+function isManagedBlobUrl(value) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+
+    if (url.protocol !== "https:") {
+      return false;
+    }
+
+    return (
+      hostname === "blob.vercel-storage.com" ||
+      hostname.endsWith(".blob.vercel-storage.com") ||
+      hostname.endsWith(".public.blob.vercel-storage.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function normalizeFileSize(value) {
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue)) {
+    return null;
+  }
+
+  const normalizedValue = Math.max(0, Math.trunc(parsedValue));
+  return normalizedValue <= MAX_SCORE_FILE_SIZE ? normalizedValue : null;
+}
+
 function normalizeEntryInput(body) {
+  const sourceUrl = normalizeUrl(body?.sourceUrl);
+  const isManagedUpload = isManagedBlobUrl(sourceUrl);
+
   return {
     title: normalizeText(body?.title, TITLE_LIMIT) || "",
     composer: normalizeText(body?.composer, SHORT_TEXT_LIMIT),
@@ -63,11 +91,9 @@ function normalizeEntryInput(body) {
     instrumentation: normalizeText(body?.instrumentation, INSTRUMENTATION_LIMIT),
     difficulty: normalizeText(body?.difficulty, DIFFICULTY_LIMIT),
     description: normalizeText(body?.description, DESCRIPTION_LIMIT),
-    sourceUrl: normalizeUrl(body?.sourceUrl),
-    fileName: normalizeText(body?.fileName, 180),
-    fileSize: Number.isFinite(Number(body?.fileSize))
-      ? Math.max(0, Math.trunc(Number(body.fileSize)))
-      : null,
+    sourceUrl,
+    fileName: isManagedUpload ? normalizeText(body?.fileName, 180) : null,
+    fileSize: isManagedUpload ? normalizeFileSize(body?.fileSize) : null,
   };
 }
 
@@ -124,19 +150,26 @@ export default async function handler(request, response) {
         isAdmin: isAdminRequest(request),
       });
     } catch (error) {
-      return sendJson(response, 500, {
+      return sendServerError(response, "Unable to load score entries.", error);
+      /* return sendJson(response, 500, {
         error:
           error instanceof Error
             ? error.message
             : "악보 저장소를 불러오지 못했습니다.",
-      });
+      }); */
     }
+  }
+
+  if (!isAdminRequest(request)) {
+    return sendJson(response, 401, {
+      error: "Admin access is required to manage scores.",
+    });
   }
 
   if (request.method === "POST") {
     try {
       await ensureScoreTable();
-      const entry = normalizeEntryInput(await readBody(request));
+      const entry = normalizeEntryInput(await readJsonBody(request));
 
       if (!entry.title || !entry.sourceUrl) {
         return sendJson(response, 400, {
@@ -190,10 +223,17 @@ export default async function handler(request, response) {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
-      return sendJson(response, 500, {
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "Invalid request body.",
+        });
+      }
+
+      return sendServerError(response, "Unable to save the score entry.", error);
+      /* return sendJson(response, 500, {
         error:
           error instanceof Error ? error.message : "악보를 등록하지 못했습니다.",
-      });
+      }); */
     }
   }
 
@@ -206,7 +246,7 @@ export default async function handler(request, response) {
   if (request.method === "PUT") {
     try {
       await ensureScoreTable();
-      const body = await readBody(request);
+      const body = await readJsonBody(request);
       const id = Number.parseInt(String(body?.id ?? ""), 10);
       const entry = normalizeEntryInput(body);
 
@@ -269,17 +309,24 @@ export default async function handler(request, response) {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
-      return sendJson(response, 500, {
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "Invalid request body.",
+        });
+      }
+
+      return sendServerError(response, "Unable to update the score entry.", error);
+      /* return sendJson(response, 500, {
         error:
           error instanceof Error ? error.message : "악보를 수정하지 못했습니다.",
-      });
+      }); */
     }
   }
 
   if (request.method === "DELETE") {
     try {
       await ensureScoreTable();
-      const body = await readBody(request);
+      const body = await readJsonBody(request);
       const id = Number.parseInt(String(body?.id ?? ""), 10);
 
       if (!Number.isFinite(id)) {
@@ -301,7 +348,7 @@ export default async function handler(request, response) {
         });
       }
 
-      if (result.rows[0].file_name && result.rows[0].source_url) {
+      if (isManagedBlobUrl(result.rows[0].source_url)) {
         await del(result.rows[0].source_url).catch(() => {});
       }
 
@@ -309,15 +356,23 @@ export default async function handler(request, response) {
         deletedId: String(result.rows[0].id),
       });
     } catch (error) {
-      return sendJson(response, 500, {
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "Invalid request body.",
+        });
+      }
+
+      return sendServerError(response, "Unable to delete the score entry.", error);
+      /* return sendJson(response, 500, {
         error:
           error instanceof Error ? error.message : "악보를 삭제하지 못했습니다.",
-      });
+      }); */
     }
   }
 
-  response.setHeader("Allow", "GET, POST, PUT, DELETE");
+  return sendMethodNotAllowed(response, ["GET", "POST", "PUT", "DELETE"]);
+  /* response.setHeader("Allow", "GET, POST, PUT, DELETE");
   return sendJson(response, 405, {
     error: "허용되지 않은 요청 방식입니다.",
-  });
+  }); */
 }

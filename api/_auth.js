@@ -2,9 +2,30 @@ import crypto from "node:crypto";
 
 const SESSION_COOKIE_NAME = "pinocchio_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
+const INVALID_ADMIN_CODE_VALUES = new Set([
+  "change-this-admin-code",
+  "replace-with-a-strong-admin-code",
+]);
+const INVALID_SESSION_SECRET_VALUES = new Set([
+  "change-this-session-secret",
+  "replace-with-a-long-random-secret-at-least-32-characters",
+]);
+
+function getRequiredEnvValue(name, invalidValues = new Set()) {
+  const value = process.env[name];
+
+  if (!value || invalidValues.has(value)) {
+    throw new Error(`${name} is not configured securely.`);
+  }
+
+  return value;
+}
 
 function getAdminCode() {
-  const adminCode = process.env.ADMIN_CODE;
+  const adminCode = getRequiredEnvValue(
+    "ADMIN_CODE",
+    INVALID_ADMIN_CODE_VALUES
+  );
 
   if (!adminCode) {
     throw new Error(
@@ -16,7 +37,14 @@ function getAdminCode() {
 }
 
 function getSessionSecret() {
-  const sessionSecret = process.env.ADMIN_SESSION_SECRET;
+  const sessionSecret = getRequiredEnvValue(
+    "ADMIN_SESSION_SECRET",
+    INVALID_SESSION_SECRET_VALUES
+  );
+
+  if (sessionSecret.length < 32) {
+    throw new Error("ADMIN_SESSION_SECRET must be at least 32 characters.");
+  }
 
   if (!sessionSecret) {
     throw new Error(
@@ -136,5 +164,16 @@ export function isAdminRequest(request) {
 }
 
 export function assertAdminCode(code) {
-  return typeof code === "string" && code === getAdminCode();
+  if (typeof code !== "string") {
+    return false;
+  }
+
+  const expectedCodeBuffer = Buffer.from(getAdminCode());
+  const providedCodeBuffer = Buffer.from(code);
+
+  if (expectedCodeBuffer.length !== providedCodeBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedCodeBuffer, providedCodeBuffer);
 }
