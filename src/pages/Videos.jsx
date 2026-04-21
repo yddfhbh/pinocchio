@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ConfirmDialog } from "../components/Dialog";
 import useHomeVideos from "../hooks/useHomeVideos";
 import {
@@ -35,55 +35,23 @@ function Videos({ isAdmin }) {
   const [formStatus, setFormStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState(null);
+  const activeCategory =
+    HOME_VIDEO_CATEGORIES.some((category) => category.value === selectedCategory) &&
+    homeVideoEntries.some((entry) => entry.category === selectedCategory)
+      ? selectedCategory
+      : HOME_VIDEO_CATEGORIES.find((category) =>
+            homeVideoEntries.some((entry) => entry.category === category.value)
+          )?.value || HOME_VIDEO_CATEGORIES[0].value;
 
   const filteredEntries = useMemo(
-    () => homeVideoEntries.filter((entry) => entry.category === selectedCategory),
-    [homeVideoEntries, selectedCategory]
+    () => homeVideoEntries.filter((entry) => entry.category === activeCategory),
+    [activeCategory, homeVideoEntries]
   );
   const featuredVideo = homeVideoEntries.find((entry) => entry.isHomeFeatured) || null;
   const hasFeaturedConflict =
     featuredVideo && (!editingVideoId || featuredVideo.id !== editingVideoId);
   const homeFeatureCheckboxDisabled =
     isSubmitting || (hasFeaturedConflict && !formValues.isHomeFeatured);
-
-  useEffect(() => {
-    const hasSelectedCategory = homeVideoEntries.some(
-      (entry) => entry.category === selectedCategory
-    );
-
-    if (!hasSelectedCategory) {
-      const nextCategory =
-        HOME_VIDEO_CATEGORIES.find((category) =>
-          homeVideoEntries.some((entry) => entry.category === category.value)
-        )?.value || HOME_VIDEO_CATEGORIES[0].value;
-
-      setSelectedCategory(nextCategory);
-    }
-  }, [homeVideoEntries, selectedCategory]);
-
-  useEffect(() => {
-    if (!filteredEntries.length) {
-      if (selectedVideoId) {
-        setSelectedVideoId("");
-      }
-      return;
-    }
-
-    const selectedExists = filteredEntries.some((entry) => entry.id === selectedVideoId);
-
-    if (!selectedExists) {
-      setSelectedVideoId(filteredEntries[0].id);
-    }
-  }, [filteredEntries, selectedVideoId]);
-
-  useEffect(() => {
-    if (!editingVideoId) {
-      setFormValues((current) => ({
-        ...current,
-        category: selectedCategory,
-      }));
-    }
-  }, [selectedCategory, editingVideoId]);
 
   const activeVideo =
     filteredEntries.find((entry) => entry.id === selectedVideoId) || filteredEntries[0] || null;
@@ -97,7 +65,7 @@ function Videos({ isAdmin }) {
       title: "",
       sourceUrl: "",
       description: "",
-      category: selectedCategory,
+      category: activeCategory,
       isHomeFeatured: false,
     });
     setFormStatus(null);
@@ -244,11 +212,20 @@ function Videos({ isAdmin }) {
                 key={category.value}
                 type="button"
                 role="tab"
-                aria-selected={selectedCategory === category.value}
+                aria-selected={activeCategory === category.value}
                 className={`videos-category-button${
-                  selectedCategory === category.value ? " is-active" : ""
+                  activeCategory === category.value ? " is-active" : ""
                 }`}
-                onClick={() => setSelectedCategory(category.value)}
+                onClick={() => {
+                  setSelectedCategory(category.value);
+
+                  if (!editingVideoId) {
+                    setFormValues((current) => ({
+                      ...current,
+                      category: category.value,
+                    }));
+                  }
+                }}
               >
                 {category.label}
               </button>

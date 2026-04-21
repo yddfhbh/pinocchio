@@ -427,7 +427,7 @@ function Schedule({ isAdmin }) {
               </div>
 
               
-                {false ? <div className="guestbook-empty schedule-admin-empty">
+                {formMode === "readonly" ? <div className="guestbook-empty schedule-admin-empty">
                   헤더의 방명록 옆 관리자 버튼으로 로그인하면 이곳에서 일정을 수정할
                   수 있습니다.
                 </div> : null}

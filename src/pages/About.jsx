@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useAboutContent from "../hooks/useAboutContent";
 import {
   ABOUT_CONTENT_ITEM_LIMIT,
@@ -34,10 +34,6 @@ function About({ isAdmin }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState(null);
   const [formValues, setFormValues] = useState(() => toFormValues(content));
-
-  useEffect(() => {
-    setFormValues(toFormValues(content));
-  }, [content]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -85,7 +81,11 @@ function About({ isAdmin }) {
             <button
               type="button"
               className="btn btn-dark videos-admin-toggle about-admin-toggle"
-              onClick={() => setIsEditorOpen((current) => !current)}
+              onClick={() => {
+                setFormStatus(null);
+                setFormValues(toFormValues(content));
+                setIsEditorOpen((current) => !current);
+              }}
             >
               {isEditorOpen ? "소개 편집 닫기" : "소개 편집"}
             </button>

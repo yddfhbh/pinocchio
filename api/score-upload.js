@@ -20,12 +20,15 @@ function isAllowedPdfPathname(pathname) {
   }
 
   const trimmedPathname = pathname.trim();
+  const hasControlCharacter = Array.from(trimmedPathname).some(
+    (character) => character.charCodeAt(0) < 32
+  );
 
   if (
     !trimmedPathname ||
     trimmedPathname.length > 120 ||
     /[\\/]/.test(trimmedPathname) ||
-    /[\u0000-\u001f]/.test(trimmedPathname)
+    hasControlCharacter
   ) {
     return false;
   }
@@ -64,6 +67,13 @@ export default async function handler(request, response) {
     if (!isAllowedPdfPathname(body?.pathname)) {
       return sendJson(response, 400, {
         error: "Only direct PDF filenames are allowed.",
+      });
+    }
+
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return sendJson(response, 503, {
+        error:
+          "PDF upload is disabled in this environment. Set BLOB_READ_WRITE_TOKEN or use a direct file URL instead.",
       });
     }
 
