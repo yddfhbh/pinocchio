@@ -8,6 +8,15 @@ let scoreInitPromise;
 let homeVideoInitPromise;
 let aboutContentInitPromise;
 
+function shouldAttachDatabasePool() {
+  return Boolean(
+    process.env.VERCEL ||
+    process.env.VERCEL_ENV ||
+    process.env.VERCEL_REGION ||
+    process.env.VERCEL_URL
+  );
+}
+
 function buildConnectionStringFromParts() {
   const host = process.env.POSTGRES_HOST?.trim();
   const user = process.env.POSTGRES_USER?.trim();
@@ -126,7 +135,13 @@ function getPool() {
       ssl: getSslConfiguration(),
     });
 
-    attachDatabasePool(pool);
+    if (shouldAttachDatabasePool()) {
+      try {
+        attachDatabasePool(pool);
+      } catch (error) {
+        console.warn("Skipping Vercel database pool attachment:", error);
+      }
+    }
   }
 
   return pool;
