@@ -1,3 +1,5 @@
 git add . && git commit -m "site update" && git push
 
 npm run dev
+
+docker compose up -d --build
