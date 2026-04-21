@@ -55,7 +55,13 @@ services:
       - "3000:3000"
     environment:
       PORT: 3000
-      POSTGRES_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-pinocchio}
+      POSTGRES_URL: ${POSTGRES_URL:-}
+      DATABASE_URL: ${DATABASE_URL:-}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-pinocchio}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_SSL: ${POSTGRES_SSL:-disable}
       ADMIN_CODE: ${ADMIN_CODE:-local-admin-code}
       ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:-local-admin-session-secret-for-docker-dev-please-change-123456}

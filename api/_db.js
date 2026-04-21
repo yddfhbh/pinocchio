@@ -8,6 +8,74 @@ let scoreInitPromise;
 let homeVideoInitPromise;
 let aboutContentInitPromise;
 
+function buildConnectionStringFromParts() {
+  const host = process.env.POSTGRES_HOST?.trim();
+  const user = process.env.POSTGRES_USER?.trim();
+  const database = process.env.POSTGRES_DB?.trim() || "pinocchio";
+  const port = process.env.POSTGRES_PORT?.trim() || "5432";
+  const password = process.env.POSTGRES_PASSWORD ?? "";
+
+  if (!host || !user) {
+    return null;
+  }
+
+  const url = new URL("postgres://placeholder");
+  url.username = user;
+  url.password = password;
+  url.hostname = host;
+  url.port = port;
+  url.pathname = `/${database}`;
+
+  return url.toString();
+}
+
+function getRawConnectionString() {
+  return (
+    process.env.POSTGRES_URL ||
+    process.env.DATABASE_URL ||
+    buildConnectionStringFromParts()
+  );
+}
+
+export function getDatabaseConnectionSummary() {
+  const rawConnectionString = getRawConnectionString();
+  const summary = {
+    configured: Boolean(rawConnectionString),
+    source: process.env.POSTGRES_URL
+      ? "POSTGRES_URL"
+      : process.env.DATABASE_URL
+        ? "DATABASE_URL"
+        : buildConnectionStringFromParts()
+          ? "POSTGRES_*"
+          : "missing",
+    sslMode: String(process.env.POSTGRES_SSL || "require").toLowerCase(),
+  };
+
+  if (!rawConnectionString) {
+    return summary;
+  }
+
+  try {
+    const url = new URL(rawConnectionString);
+
+    return {
+      ...summary,
+      database: url.pathname.replace(/^\//u, "") || null,
+      host: url.hostname || null,
+      port: url.port || null,
+      user: url.username || null,
+    };
+  } catch {
+    return {
+      ...summary,
+      database: null,
+      host: null,
+      port: null,
+      user: null,
+    };
+  }
+}
+
 function sanitizeConnectionString(connectionString) {
   try {
     const url = new URL(connectionString);
@@ -42,8 +110,7 @@ function getSslConfiguration() {
 }
 
 function getPool() {
-  const rawConnectionString =
-    process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const rawConnectionString = getRawConnectionString();
 
   if (!rawConnectionString) {
     throw new Error(
