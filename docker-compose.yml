@@ -1,4 +1,24 @@
 services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pinocchio}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pinocchio}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   nginx:
     image: nginx:1.27-alpine
     ports:
@@ -34,15 +54,19 @@ services:
     ports:
       - "3000:3000"
     environment:
-      POSTGRES_URL: ${POSTGRES_URL}
-      POSTGRES_SSL: ${POSTGRES_SSL:-require}
+      POSTGRES_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-pinocchio}
+      POSTGRES_SSL: ${POSTGRES_SSL:-disable}
       ADMIN_CODE: ${ADMIN_CODE}
       ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET}
       BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
     volumes:
       - .:/app
       - api_node_modules:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
+  db_data:
   web_node_modules:
   api_node_modules:
