@@ -5,6 +5,7 @@ import {
   deleteHomeVideoEntry,
   getHomeVideoCategoryLabel,
   HOME_VIDEO_CATEGORIES,
+  HOME_VIDEO_DESCRIPTION_LIMIT,
   HOME_VIDEO_TITLE_LIMIT,
   HOME_VIDEO_URL_LIMIT,
   saveHomeVideoEntry,
@@ -27,6 +28,7 @@ function Videos({ isAdmin }) {
   const [formValues, setFormValues] = useState({
     title: "",
     sourceUrl: "",
+    description: "",
     category: HOME_VIDEO_CATEGORIES[0].value,
     isHomeFeatured: false,
   });
@@ -94,6 +96,7 @@ function Videos({ isAdmin }) {
     setFormValues({
       title: "",
       sourceUrl: "",
+      description: "",
       category: selectedCategory,
       isHomeFeatured: false,
     });
@@ -136,6 +139,7 @@ function Videos({ isAdmin }) {
       setFormValues({
         title: "",
         sourceUrl: "",
+        description: "",
         category: entry.category,
         isHomeFeatured: false,
       });
@@ -162,6 +166,7 @@ function Videos({ isAdmin }) {
     setFormValues({
       title: entry.title,
       sourceUrl: entry.sourceUrl,
+      description: entry.description || "",
       category: entry.category,
       isHomeFeatured: entry.isHomeFeatured,
     });
@@ -280,6 +285,9 @@ function Videos({ isAdmin }) {
                           ) : null}
                         </div>
                         <h3>{activeVideo.title}</h3>
+                        {activeVideo.description ? (
+                          <p className="videos-description">{activeVideo.description}</p>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -309,6 +317,9 @@ function Videos({ isAdmin }) {
                               ) : null}
                             </div>
                             <h3>{entry.title}</h3>
+                            {entry.description ? (
+                              <p className="videos-description">{entry.description}</p>
+                            ) : null}
                           </div>
                         </article>
                       ))}
@@ -388,6 +399,23 @@ function Videos({ isAdmin }) {
                 }
               />
 
+              <label className="guestbook-label" htmlFor="home-video-description">
+                설명
+              </label>
+              <textarea
+                id="home-video-description"
+                rows="4"
+                maxLength={HOME_VIDEO_DESCRIPTION_LIMIT}
+                placeholder="영상 아래에 함께 보여줄 공연 소개나 메모를 적어 주세요."
+                value={formValues.description}
+                onChange={(event) =>
+                  setFormValues((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
+                }
+              ></textarea>
+
               <label className="home-video-feature-toggle" htmlFor="home-video-featured">
                 <input
                   id="home-video-featured"
@@ -458,6 +486,9 @@ function Videos({ isAdmin }) {
                         ) : null}
                       </div>
                       <strong>{entry.title}</strong>
+                      {entry.description ? (
+                        <p className="home-video-admin-description">{entry.description}</p>
+                      ) : null}
                       <a
                         href={entry.sourceUrl}
                         target="_blank"

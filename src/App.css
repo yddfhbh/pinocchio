@@ -1567,6 +1567,18 @@ a {
   font-family: inherit;
 }
 
+.home-video-admin-form textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  resize: vertical;
+  margin-bottom: 12px;
+  font-family: inherit;
+  line-height: 1.7;
+}
+
 .home-video-admin-form select {
   width: 100%;
   border: 1px solid #d1d5db;
@@ -1579,6 +1591,12 @@ a {
 }
 
 .home-video-admin-form input:focus {
+  outline: 2px solid #c7d2fe;
+  outline-offset: 2px;
+  border-color: #93c5fd;
+}
+
+.home-video-admin-form textarea:focus {
   outline: 2px solid #c7d2fe;
   outline-offset: 2px;
   border-color: #93c5fd;
@@ -1635,6 +1653,15 @@ a {
 
 .home-video-admin-item-text strong {
   font-size: 16px;
+}
+
+.videos-description,
+.home-video-admin-description {
+  margin: 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-line;
 }
 
 .home-video-admin-link {

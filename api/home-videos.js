@@ -1,5 +1,6 @@
 import {
   DEFAULT_HOME_VIDEO_CATEGORY,
+  HOME_VIDEO_DESCRIPTION_LIMIT,
   HOME_VIDEO_TITLE_LIMIT,
   HOME_VIDEO_URL_LIMIT,
   normalizeHomeVideoCategory,
@@ -36,11 +37,16 @@ function normalizeVideoInput(body) {
       : typeof body?.url === "string"
         ? body.url.trim().slice(0, HOME_VIDEO_URL_LIMIT)
         : "";
+  const description =
+    typeof body?.description === "string"
+      ? body.description.trim().slice(0, HOME_VIDEO_DESCRIPTION_LIMIT)
+      : "";
   const category = normalizeHomeVideoCategory(body?.category);
 
   return {
     title,
     sourceUrl,
+    description,
     category,
     isHomeFeatured: body?.isHomeFeatured === true,
     embedUrl: toHomeVideoEmbedUrl(sourceUrl),
@@ -52,6 +58,7 @@ function toEntry(row) {
     id: String(row.id),
     title: row.title,
     sourceUrl: row.source_url,
+    description: row.description || "",
     category: normalizeHomeVideoCategory(row.category || DEFAULT_HOME_VIDEO_CATEGORY),
     isHomeFeatured: row.is_home_featured === true,
   };
@@ -96,7 +103,7 @@ export default async function handler(request, response) {
       await ensureHomeVideosTable();
 
       const result = await query(
-        `SELECT id, title, source_url, category, is_home_featured
+        `SELECT id, title, source_url, description, category, is_home_featured
          FROM home_videos
          ORDER BY is_home_featured DESC, created_at ASC, id ASC`
       );
@@ -123,7 +130,7 @@ export default async function handler(request, response) {
     try {
       await ensureHomeVideosTable();
 
-      const { title, sourceUrl, category, isHomeFeatured, embedUrl } = normalizeVideoInput(
+      const { title, sourceUrl, description, category, isHomeFeatured, embedUrl } = normalizeVideoInput(
         await readBody(request)
       );
 
@@ -150,10 +157,10 @@ export default async function handler(request, response) {
       }
 
       const result = await query(
-        `INSERT INTO home_videos (title, source_url, category, is_home_featured)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, title, source_url, category, is_home_featured`,
-        [title, sourceUrl, category, isHomeFeatured]
+        `INSERT INTO home_videos (title, source_url, description, category, is_home_featured)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, title, source_url, description, category, is_home_featured`,
+        [title, sourceUrl, description || null, category, isHomeFeatured]
       );
 
       return sendJson(response, 201, {
@@ -186,7 +193,7 @@ export default async function handler(request, response) {
         });
       }
 
-      const { title, sourceUrl, category, isHomeFeatured, embedUrl } = normalizeVideoInput(body);
+      const { title, sourceUrl, description, category, isHomeFeatured, embedUrl } = normalizeVideoInput(body);
 
       if (!title || !sourceUrl) {
         return sendJson(response, 400, {
@@ -214,11 +221,12 @@ export default async function handler(request, response) {
         `UPDATE home_videos
          SET title = $1,
              source_url = $2,
-             category = $3,
-             is_home_featured = $4
-         WHERE id = $5
-         RETURNING id, title, source_url, category, is_home_featured`,
-        [title, sourceUrl, category, isHomeFeatured, id]
+             description = $3,
+             category = $4,
+             is_home_featured = $5
+         WHERE id = $6
+         RETURNING id, title, source_url, description, category, is_home_featured`,
+        [title, sourceUrl, description || null, category, isHomeFeatured, id]
       );
 
       if (!result.rows.length) {

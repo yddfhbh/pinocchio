@@ -123,6 +123,9 @@ function Home() {
                   <div className="home-video-title-row">
                     <h3>{activeVideo.title}</h3>
                   </div>
+                  {activeVideo.description ? (
+                    <p className="videos-description">{activeVideo.description}</p>
+                  ) : null}
                 </div>
               </div>
             ) : (

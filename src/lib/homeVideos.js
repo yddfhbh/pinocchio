@@ -1,5 +1,6 @@
 export const HOME_VIDEO_TITLE_LIMIT = 120;
 export const HOME_VIDEO_URL_LIMIT = 500;
+export const HOME_VIDEO_DESCRIPTION_LIMIT = 500;
 
 export const HOME_VIDEO_CATEGORIES = [
   { value: "regular", label: "정기공연" },
@@ -18,6 +19,7 @@ export const DEFAULT_HOME_VIDEO_ENTRIES = [
     id: "sample-home-video-1",
     title: "Where is BLUE (김푸른 리사이틀) 1부",
     sourceUrl: "https://www.youtube.com/watch?v=bZxeSLM4TWs",
+    description: "",
     category: DEFAULT_HOME_VIDEO_CATEGORY,
     isHomeFeatured: true,
   },
@@ -109,6 +111,10 @@ function normalizeHomeVideoEntry(entry, index) {
       : typeof entry.url === "string"
         ? entry.url.trim().slice(0, HOME_VIDEO_URL_LIMIT)
         : "";
+  const description =
+    typeof entry.description === "string"
+      ? entry.description.trim().slice(0, HOME_VIDEO_DESCRIPTION_LIMIT)
+      : "";
   const embedUrl = toHomeVideoEmbedUrl(sourceUrl);
   const category = normalizeHomeVideoCategory(entry.category);
 
@@ -120,6 +126,7 @@ function normalizeHomeVideoEntry(entry, index) {
     id: typeof entry.id === "string" && entry.id ? entry.id : `home-video-${index}`,
     title,
     sourceUrl,
+    description,
     embedUrl,
     category,
     isHomeFeatured: entry.isHomeFeatured === true,
