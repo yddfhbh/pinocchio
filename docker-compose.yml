@@ -50,10 +50,11 @@ services:
   api:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "npm ci && npx --yes vercel dev --listen 0.0.0.0:3000"
+    command: sh -c "npm ci && npm run api"
     ports:
       - "3000:3000"
     environment:
+      PORT: 3000
       POSTGRES_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-pinocchio}
       POSTGRES_SSL: ${POSTGRES_SSL:-disable}
       ADMIN_CODE: ${ADMIN_CODE:-local-admin-code}
