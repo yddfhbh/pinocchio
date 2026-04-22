@@ -6,6 +6,7 @@ const ADMIN_AUTH_CONFIGURATION_ERROR = "ADMIN_AUTH_CONFIGURATION_ERROR";
 const INVALID_ADMIN_CODE_VALUES = new Set([
   "change-this-admin-code",
   "replace-with-a-strong-admin-code",
+  "replace-with-a-strong-unique-admin-code",
 ]);
 const INVALID_SESSION_SECRET_VALUES = new Set([
   "change-this-session-secret",

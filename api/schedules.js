@@ -1,25 +1,16 @@
 import { isAdminRequest } from "./_admin-auth.js";
-import { ensureScheduleTable, query } from "./_db.js";
+import { query } from "./_db.js";
+import {
+  isInvalidJsonBodyError,
+  readJsonBody,
+  sendJson,
+  sendMethodNotAllowed,
+  sendServerError,
+} from "./_response.js";
 
 const SCHEDULE_TITLE_LIMIT = 80;
 const SCHEDULE_DESCRIPTION_LIMIT = 300;
-
-function sendJson(response, statusCode, payload) {
-  response.status(statusCode).setHeader("Content-Type", "application/json");
-  response.send(JSON.stringify(payload));
-}
-
-async function readBody(request) {
-  if (request.body && typeof request.body === "object") {
-    return request.body;
-  }
-
-  if (typeof request.body === "string") {
-    return JSON.parse(request.body);
-  }
-
-  return {};
-}
+const SCHEDULE_PREVIEW_LIMIT = 90;
 
 function normalizeTime(value) {
   if (typeof value !== "string") {
@@ -113,22 +104,18 @@ async function listEntries(limit) {
 export default async function handler(request, response) {
   if (request.method === "GET") {
     const rawLimit = Number.parseInt(String(request.query?.limit ?? ""), 10);
-    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : null;
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(rawLimit, SCHEDULE_PREVIEW_LIMIT)
+        : null;
 
     try {
-      await ensureScheduleTable();
-
       return sendJson(response, 200, {
         entries: await listEntries(limit),
         isAdmin: isAdminRequest(request),
       });
     } catch (error) {
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error
-            ? error.message
-            : "일정을 불러오지 못했습니다.",
-      });
+      return sendServerError(response, "일정을 불러오지 못했습니다.", error);
     }
   }
 
@@ -140,10 +127,8 @@ export default async function handler(request, response) {
 
   if (request.method === "POST") {
     try {
-      await ensureScheduleTable();
-
       const { title, description, category, eventDate, startTime, endTime } =
-        normalizeEntryInput(await readBody(request));
+        normalizeEntryInput(await readJsonBody(request));
 
       if (!title || !eventDate) {
         return sendJson(response, 400, {
@@ -164,20 +149,19 @@ export default async function handler(request, response) {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error
-            ? error.message
-            : "일정을 등록하지 못했습니다.",
-      });
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "잘못된 요청 본문입니다.",
+        });
+      }
+
+      return sendServerError(response, "일정을 등록하지 못했습니다.", error);
     }
   }
 
   if (request.method === "PUT") {
     try {
-      await ensureScheduleTable();
-
-      const body = await readBody(request);
+      const body = await readJsonBody(request);
       const id = Number.parseInt(String(body?.id ?? ""), 10);
       const { title, description, category, eventDate, startTime, endTime } =
         normalizeEntryInput(body);
@@ -212,20 +196,19 @@ export default async function handler(request, response) {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error
-            ? error.message
-            : "일정을 수정하지 못했습니다.",
-      });
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "잘못된 요청 본문입니다.",
+        });
+      }
+
+      return sendServerError(response, "일정을 수정하지 못했습니다.", error);
     }
   }
 
   if (request.method === "DELETE") {
     try {
-      await ensureScheduleTable();
-
-      const body = await readBody(request);
+      const body = await readJsonBody(request);
       const id = Number.parseInt(String(body?.id ?? ""), 10);
 
       if (!Number.isFinite(id)) {
@@ -251,17 +234,15 @@ export default async function handler(request, response) {
         deletedId: String(result.rows[0].id),
       });
     } catch (error) {
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error
-            ? error.message
-            : "일정을 삭제하지 못했습니다.",
-      });
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "잘못된 요청 본문입니다.",
+        });
+      }
+
+      return sendServerError(response, "일정을 삭제하지 못했습니다.", error);
     }
   }
 
-  response.setHeader("Allow", "GET, POST, PUT, DELETE");
-  return sendJson(response, 405, {
-    error: "허용되지 않은 요청 방식입니다.",
-  });
+  return sendMethodNotAllowed(response, ["GET", "POST", "PUT", "DELETE"]);
 }

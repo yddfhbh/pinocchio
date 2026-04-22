@@ -14,7 +14,9 @@
 
   const { guestbook, reload: reloadGuestbook } = createGuestbookEntriesState(3);
   const { schedule, reload: reloadSchedule } = createScheduleEntriesState(3);
-  const { homeVideos, reload: reloadHomeVideos } = createHomeVideosState();
+  const { homeVideos, reload: reloadHomeVideos } = createHomeVideosState({
+    featuredOnly: true,
+  });
 
   const activeVideo = $derived(
     homeVideos.entries.find((entry) => entry.isHomeFeatured) || null

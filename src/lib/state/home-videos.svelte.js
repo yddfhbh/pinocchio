@@ -7,7 +7,7 @@ function getFallbackEntries() {
   return DEFAULT_HOME_VIDEO_ENTRIES.map((entry) => ({ ...entry }));
 }
 
-export function createHomeVideosState() {
+export function createHomeVideosState(options = {}) {
   const homeVideos = $state({
     entries: getFallbackEntries(),
     isLoading: true,
@@ -19,7 +19,7 @@ export function createHomeVideosState() {
     homeVideos.isLoading = true;
 
     try {
-      const result = await fetchHomeVideoEntries();
+      const result = await fetchHomeVideoEntries(options);
       homeVideos.entries = result.entries;
       homeVideos.error = "";
       homeVideos.isFallbackData = false;

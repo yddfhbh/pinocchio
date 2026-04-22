@@ -205,13 +205,24 @@ export function getCalendarDays(monthDate, entries) {
   const visibleDays = visibleWeeks * 7;
   const calendarStart = new Date(monthStart);
   calendarStart.setDate(monthStart.getDate() - startDay);
+  const entriesByDate = (Array.isArray(entries) ? entries : []).reduce((map, entry) => {
+    const currentEntries = map.get(entry.eventDate);
+
+    if (currentEntries) {
+      currentEntries.push(entry);
+    } else {
+      map.set(entry.eventDate, [entry]);
+    }
+
+    return map;
+  }, new Map());
 
   return Array.from({ length: visibleDays }, (_, index) => {
     const date = new Date(calendarStart);
     date.setDate(calendarStart.getDate() + index);
 
     const key = toDateKey(date);
-    const dayEntries = entries.filter((entry) => entry.eventDate === key);
+    const dayEntries = entriesByDate.get(key) || [];
 
     return {
       key,

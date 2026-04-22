@@ -7,24 +7,14 @@ import {
   toHomeVideoEmbedUrl,
 } from "../src/lib/homeVideos.js";
 import { isAdminRequest } from "./_admin-auth.js";
-import { ensureHomeVideosTable, query } from "./_db.js";
-
-function sendJson(response, statusCode, payload) {
-  response.status(statusCode).setHeader("Content-Type", "application/json");
-  response.send(JSON.stringify(payload));
-}
-
-async function readBody(request) {
-  if (request.body && typeof request.body === "object") {
-    return request.body;
-  }
-
-  if (typeof request.body === "string") {
-    return JSON.parse(request.body);
-  }
-
-  return {};
-}
+import { query } from "./_db.js";
+import {
+  isInvalidJsonBodyError,
+  readJsonBody,
+  sendJson,
+  sendMethodNotAllowed,
+  sendServerError,
+} from "./_response.js";
 
 function normalizeVideoInput(body) {
   const title =
@@ -64,6 +54,29 @@ function toEntry(row) {
   };
 }
 
+function isFeaturedOnlyRequest(request) {
+  const rawValue = String(request.query?.featuredOnly ?? "").trim().toLowerCase();
+  return rawValue === "1" || rawValue === "true";
+}
+
+async function listVideoEntries(featuredOnly) {
+  const result = featuredOnly
+    ? await query(
+        `SELECT id, title, source_url, description, category, is_home_featured
+         FROM home_videos
+         WHERE is_home_featured = TRUE
+         ORDER BY created_at DESC, id DESC
+         LIMIT 1`
+      )
+    : await query(
+        `SELECT id, title, source_url, description, category, is_home_featured
+         FROM home_videos
+         ORDER BY is_home_featured DESC, created_at ASC, id ASC`
+      );
+
+  return result.rows.map(toEntry);
+}
+
 async function findHomeFeaturedConflict(excludedId = null) {
   const params = [];
   let whereClause = "WHERE is_home_featured = TRUE";
@@ -100,23 +113,12 @@ function isHomeFeaturedUniqueError(error) {
 export default async function handler(request, response) {
   if (request.method === "GET") {
     try {
-      await ensureHomeVideosTable();
-
-      const result = await query(
-        `SELECT id, title, source_url, description, category, is_home_featured
-         FROM home_videos
-         ORDER BY is_home_featured DESC, created_at ASC, id ASC`
-      );
-
       return sendJson(response, 200, {
-        entries: result.rows.map(toEntry),
+        entries: await listVideoEntries(isFeaturedOnlyRequest(request)),
         isAdmin: isAdminRequest(request),
       });
     } catch (error) {
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error ? error.message : "대표 공연 영상을 불러오지 못했습니다.",
-      });
+      return sendServerError(response, "대표 공연 영상을 불러오지 못했습니다.", error);
     }
   }
 
@@ -128,11 +130,8 @@ export default async function handler(request, response) {
 
   if (request.method === "POST") {
     try {
-      await ensureHomeVideosTable();
-
-      const { title, sourceUrl, description, category, isHomeFeatured, embedUrl } = normalizeVideoInput(
-        await readBody(request)
-      );
+      const { title, sourceUrl, description, category, isHomeFeatured, embedUrl } =
+        normalizeVideoInput(await readJsonBody(request));
 
       if (!title || !sourceUrl) {
         return sendJson(response, 400, {
@@ -167,24 +166,25 @@ export default async function handler(request, response) {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "잘못된 요청 본문입니다.",
+        });
+      }
+
       if (isHomeFeaturedUniqueError(error)) {
         return sendJson(response, 409, {
           error: "이미 다른 영상이 홈페이지용으로 설정되어 있습니다. 먼저 해당 영상을 해제해 주세요.",
         });
       }
 
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error ? error.message : "대표 공연 영상을 등록하지 못했습니다.",
-      });
+      return sendServerError(response, "대표 공연 영상을 등록하지 못했습니다.", error);
     }
   }
 
   if (request.method === "PATCH") {
     try {
-      await ensureHomeVideosTable();
-
-      const body = await readBody(request);
+      const body = await readJsonBody(request);
       const id = parseVideoId(body?.id);
 
       if (id === null) {
@@ -193,7 +193,8 @@ export default async function handler(request, response) {
         });
       }
 
-      const { title, sourceUrl, description, category, isHomeFeatured, embedUrl } = normalizeVideoInput(body);
+      const { title, sourceUrl, description, category, isHomeFeatured, embedUrl } =
+        normalizeVideoInput(body);
 
       if (!title || !sourceUrl) {
         return sendJson(response, 400, {
@@ -239,24 +240,25 @@ export default async function handler(request, response) {
         entry: toEntry(result.rows[0]),
       });
     } catch (error) {
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "잘못된 요청 본문입니다.",
+        });
+      }
+
       if (isHomeFeaturedUniqueError(error)) {
         return sendJson(response, 409, {
           error: "이미 다른 영상이 홈페이지용으로 설정되어 있습니다. 먼저 해당 영상을 해제해 주세요.",
         });
       }
 
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error ? error.message : "대표 공연 영상을 수정하지 못했습니다.",
-      });
+      return sendServerError(response, "대표 공연 영상을 수정하지 못했습니다.", error);
     }
   }
 
   if (request.method === "DELETE") {
     try {
-      await ensureHomeVideosTable();
-
-      const body = await readBody(request);
+      const body = await readJsonBody(request);
       const id = parseVideoId(body?.id);
 
       if (id === null) {
@@ -282,15 +284,15 @@ export default async function handler(request, response) {
         deletedId: String(result.rows[0].id),
       });
     } catch (error) {
-      return sendJson(response, 500, {
-        error:
-          error instanceof Error ? error.message : "대표 공연 영상을 삭제하지 못했습니다.",
-      });
+      if (isInvalidJsonBodyError(error)) {
+        return sendJson(response, 400, {
+          error: "잘못된 요청 본문입니다.",
+        });
+      }
+
+      return sendServerError(response, "대표 공연 영상을 삭제하지 못했습니다.", error);
     }
   }
 
-  response.setHeader("Allow", "GET, POST, PATCH, DELETE");
-  return sendJson(response, 405, {
-    error: "허용하지 않는 요청 방식입니다.",
-  });
+  return sendMethodNotAllowed(response, ["GET", "POST", "PATCH", "DELETE"]);
 }

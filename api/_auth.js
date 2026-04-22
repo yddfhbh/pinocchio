@@ -5,6 +5,7 @@ const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const INVALID_ADMIN_CODE_VALUES = new Set([
   "change-this-admin-code",
   "replace-with-a-strong-admin-code",
+  "replace-with-a-strong-unique-admin-code",
 ]);
 const INVALID_SESSION_SECRET_VALUES = new Set([
   "change-this-session-secret",

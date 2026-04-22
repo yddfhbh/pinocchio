@@ -153,8 +153,14 @@ async function parseApiResponse(response, fallbackMessage) {
   return payload;
 }
 
-export async function fetchHomeVideoEntries() {
-  const response = await fetch("/api/home-videos");
+export async function fetchHomeVideoEntries(options = {}) {
+  const search = new URLSearchParams();
+
+  if (options.featuredOnly) {
+    search.set("featuredOnly", "1");
+  }
+
+  const response = await fetch(`/api/home-videos${search.size ? `?${search}` : ""}`);
   const payload = await parseApiResponse(response, "대표 공연 영상을 불러오지 못했습니다.");
 
   return {
