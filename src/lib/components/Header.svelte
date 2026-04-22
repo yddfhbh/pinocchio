@@ -80,7 +80,10 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="/" class="logo">PINOCCHIO</a>
+    <div class="brand-lockup">
+      <a href="/" class="logo">PINOCCHIO</a>
+      <span class="logo-caption">PUSAN NATIONAL UNIVERSITY PAN FLUTE CLUB</span>
+    </div>
 
     <nav class="nav">
       <a href="/">홈</a>
