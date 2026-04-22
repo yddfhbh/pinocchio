@@ -80,13 +80,12 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="/" class="brand-lockup" aria-label="PINOCCHIO 홈으로 이동">
-      <span class="logo-caption">PUSAN NATIONAL UNIVERSITY</span>
-      <span class="logo">PINOCCHIO</span>
-      <span class="brand-subtitle">PAN FLUTE CLUB ARCHIVE</span>
-    </a>
+    <div class="brand-lockup">
+      <a href="/" class="logo">PINOCCHIO</a>
+      <span class="logo-caption">PUSAN NATIONAL UNIVERSITY PAN FLUTE CLUB</span>
+    </div>
 
-    <nav class="nav" aria-label="주요 메뉴">
+    <nav class="nav">
       <a href="/">홈</a>
       <a href="/about">동아리 소개</a>
       <a href="/scores">악보실</a>

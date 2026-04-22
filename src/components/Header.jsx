@@ -60,13 +60,11 @@ function Header({ isAdmin, isConfigured, isLoading, isSubmitting, onLogin, onLog
   return (
     <header className="header">
       <div className="container header-inner">
-        <Link to="/" className="brand-lockup" aria-label="PINOCCHIO 홈으로 이동">
-          <span className="logo-caption">PUSAN NATIONAL UNIVERSITY</span>
-          <span className="logo">PINOCCHIO</span>
-          <span className="brand-subtitle">PAN FLUTE CLUB ARCHIVE</span>
+        <Link to="/" className="logo">
+          PINOCCHIO
         </Link>
 
-        <nav className="nav" aria-label="주요 메뉴">
+        <nav className="nav">
           <Link to="/">홈</Link>
           <Link to="/about">동아리 소개</Link>
           <Link to="/scores">악보실</Link>
