@@ -27,14 +27,14 @@ Set these values on the server:
 APP_DOMAIN=pusanpino.kro.kr
 APP_DOMAIN_ALIASES=
 LETSENCRYPT_EMAIL=you@example.com
-VITE_ALLOWED_HOSTS=pusanpino.kro.kr,.pusanpino.kro.kr
+VITE_ALLOWED_HOSTS=pusanpino.kro.kr,.pusanpino.kro.kr,localhost,127.0.0.1
 ```
 
 If you also want `www`, set:
 
 ```env
 APP_DOMAIN_ALIASES=www.pusanpino.kro.kr
-VITE_ALLOWED_HOSTS=pusanpino.kro.kr,.pusanpino.kro.kr
+VITE_ALLOWED_HOSTS=pusanpino.kro.kr,.pusanpino.kro.kr,localhost,127.0.0.1
 ```
 
 ## 4. Deploy
