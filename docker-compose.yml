@@ -34,9 +34,9 @@ services:
       - letsencrypt:/etc/letsencrypt:ro
     depends_on:
       web:
-        condition: service_started
+        condition: service_healthy
       api:
-        condition: service_started
+        condition: service_healthy
 
   certbot:
     image: certbot/certbot:latest
@@ -58,6 +58,16 @@ services:
     volumes:
       - .:/app
       - web_node_modules:/app/node_modules
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:5173/ >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
     depends_on:
       api:
         condition: service_started
@@ -84,6 +94,16 @@ services:
     volumes:
       - .:/app
       - api_node_modules:/app/node_modules
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3000/api/health >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     depends_on:
       db:
         condition: service_healthy
