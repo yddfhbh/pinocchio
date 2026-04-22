@@ -5,3 +5,6 @@ npm run dev
 sudo docker compose up --build -d
 
 git pull origin main && docker compose up -d --build
+
+cd ~/gitpulls/pinocchio
+bash ./scripts/renew-letsencrypt-cert.sh

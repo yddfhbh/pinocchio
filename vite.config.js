@@ -1,5 +1,5 @@
+import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 
 const apiProxyTarget = process.env.API_PROXY_TARGET || "http://localhost:3000";
 const allowedHosts = (process.env.VITE_ALLOWED_HOSTS || "")
@@ -9,7 +9,7 @@ const allowedHosts = (process.env.VITE_ALLOWED_HOSTS || "")
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [sveltekit()],
   server: {
     allowedHosts,
     proxy: {

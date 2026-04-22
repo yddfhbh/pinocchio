@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "svelte-kit sync && vite",
     "api": "node ./scripts/local-api-server.mjs",
-    "build": "vite build",
+    "build": "svelte-kit sync && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -20,14 +20,18 @@
     "react-router-dom": "^7.14.1"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.9",
+    "@sveltejs/kit": "^2.37.0",
+    "@sveltejs/vite-plugin-svelte": "^6.1.4",
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^5.0.2",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
-    "vite": "^8.0.4"
+    "svelte": "^5.38.7",
+    "vite": "^7.1.4"
   }
 }
