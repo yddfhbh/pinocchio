@@ -27,62 +27,127 @@
   });
 </script>
 
-<div>
+<div class="home-page">
   <section class="hero home-layout">
     <div class="container hero-grid">
       <div class="hero-left">
-        <span class="badge">Welcome to PINOCCHIO</span>
+        <span class="badge">Pusan National University Pan Flute Club</span>
+        <p class="hero-kicker">Pinocchio Archive</p>
         <h1>
-          부산대학교
+          팬플룻으로 이어온 시간을
           <br />
-          팬플룻 동아리 피노키오
+          한곳에 모아둔 동아리 아카이브
         </h1>
         <p class="hero-text">
-          악보, 공연 영상, 동아리 일정, 그리고
-          방명록까지 한곳에서 확인할 수 있습니다.
+          악보, 공연 영상, 동아리 일정, 방명록까지 피노키오의 주요 기록을 한눈에
+          둘러볼 수 있도록 정리했습니다.
         </p>
 
         <div class="hero-buttons">
           <a href="/about" class="btn btn-dark">동아리 소개 보기</a>
-          <a href="/guestbook" class="btn btn-light">방명록 바로가기</a>
+          <a href="/scores" class="btn btn-light">악보 저장소 둘러보기</a>
+        </div>
+
+        <div class="hero-stats">
+          <article class="hero-stat">
+            <strong>Archive</strong>
+            <span>연습과 공연에 필요한 자료를 한 공간에 정리해 둡니다.</span>
+          </article>
+          <article class="hero-stat">
+            <strong>Schedule</strong>
+            <span>다가오는 모임과 공연 일정을 빠르게 확인할 수 있습니다.</span>
+          </article>
+          <article class="hero-stat">
+            <strong>Moments</strong>
+            <span>대표 공연 영상과 방문자 메시지로 최근 활동을 남깁니다.</span>
+          </article>
         </div>
       </div>
 
       <div class="hero-right">
-        <div class="calendar-card">
-          <div class="calendar-card-head">
-            <h3>다가오는 일정</h3>
-            <a href="/schedule" class="calendar-card-link">전체 보기</a>
+        <div class="hero-aside-stack">
+          <div class="calendar-card">
+            <div class="calendar-card-head">
+              <h3>다가오는 일정</h3>
+              <a href="/schedule" class="calendar-card-link">전체 보기</a>
+            </div>
+
+            <div class="calendar-preview-list">
+              {#if schedule.error}
+                <div class="calendar-empty">
+                  서버 연결 문제로 잠시 일정을 확인할 수 없습니다.
+                </div>
+              {/if}
+
+              {#if schedule.isLoading}
+                <div class="calendar-empty">일정을 불러오는 중입니다.</div>
+              {:else if schedule.entries.length}
+                {#each schedule.entries as entry (entry.id)}
+                  <article class="calendar-preview-item">
+                    <div class="calendar-preview-top">
+                      <span class="schedule-category-badge">
+                        {getCategoryLabel(entry.category)}
+                      </span>
+                      <span>{formatScheduleTime(entry.startTime, entry.endTime)}</span>
+                    </div>
+                    <h4>{entry.title}</h4>
+                    <p>{formatScheduleDate(entry.eventDate)}</p>
+                  </article>
+                {/each}
+              {:else}
+                <div class="calendar-empty">등록된 일정이 아직 없습니다.</div>
+              {/if}
+            </div>
           </div>
 
-          <div class="calendar-preview-list">
-            {#if schedule.error}
-              <div class="calendar-empty">
-                서버 연결 문제로 잠시 일정을 확인할 수 없습니다.
-              </div>
-            {/if}
-
-            {#if schedule.isLoading}
-              <div class="calendar-empty">일정을 불러오는 중입니다.</div>
-            {:else if schedule.entries.length}
-              {#each schedule.entries as entry (entry.id)}
-                <article class="calendar-preview-item">
-                  <div class="calendar-preview-top">
-                    <span class="schedule-category-badge">
-                      {getCategoryLabel(entry.category)}
-                    </span>
-                    <span>{formatScheduleTime(entry.startTime, entry.endTime)}</span>
-                  </div>
-                  <h4>{entry.title}</h4>
-                  <p>{formatScheduleDate(entry.eventDate)}</p>
-                </article>
-              {/each}
-            {:else}
-              <div class="calendar-empty">등록된 일정이 아직 없습니다.</div>
-            {/if}
+          <div class="quick-links-card">
+            <p class="quick-links-eyebrow">Quick Access</p>
+            <h3>바로 둘러보기</h3>
+            <div class="quick-links-list">
+              <a href="/videos">대표 공연 영상 보기</a>
+              <a href="/guestbook">방명록 남기기</a>
+              <a href="/schedule">월간 일정 확인</a>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="home-overview-section">
+    <div class="container overview-grid">
+      <article class="overview-card">
+        <div class="overview-card-head">
+          <span class="overview-card-label">About</span>
+          <h3>동아리 소개</h3>
+        </div>
+        <p class="overview-card-copy">
+          피노키오의 활동 방향과 아카이브가 담고 있는 정보를 간결하게 살펴볼 수 있습니다.
+        </p>
+        <a href="/about" class="overview-card-link">소개 페이지 보기</a>
+      </article>
+
+      <article class="overview-card">
+        <div class="overview-card-head">
+          <span class="overview-card-label">Scores</span>
+          <h3>악보 저장소</h3>
+        </div>
+        <p class="overview-card-copy">
+          공연 준비용 편곡본부터 개인 연습 자료까지 분류별로 정리된 악보를 탐색해 보세요.
+        </p>
+        <a href="/scores" class="overview-card-link">악보실 열기</a>
+      </article>
+
+      <article class="overview-card">
+        <div class="overview-card-head">
+          <span class="overview-card-label">Performances</span>
+          <h3>공연 영상</h3>
+        </div>
+        <p class="overview-card-copy">
+          홈페이지 대표 영상과 카테고리별 공연 기록을 통해 최근 활동 분위기를 확인할 수 있습니다.
+        </p>
+        <a href="/videos" class="overview-card-link">영상 모아보기</a>
+      </article>
     </div>
   </section>
 
@@ -91,7 +156,7 @@
       <div class="media-column">
         <div class="section-title-wrap">
           <h2>대표 공연 영상</h2>
-          <p>피노키오에서 진행한 가장 최근 공연 입니다.</p>
+          <p>홈페이지에 대표 영상으로 선택된 최근 공연 기록입니다.</p>
         </div>
 
         {#if homeVideos.error}
@@ -136,7 +201,7 @@
       <div class="guestbook-column">
         <div class="section-title-wrap">
           <h2>방명록</h2>
-          <p>최근 방문자들의 메시지를 확인할 수 있습니다.</p>
+          <p>최근 방문자들이 남긴 메시지와 응원을 바로 확인할 수 있습니다.</p>
         </div>
 
         <div class="guestbook-preview-card guestbook-side-card">
