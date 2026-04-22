@@ -23,15 +23,30 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
+    command: sh -c "sh /opt/pinocchio-nginx/render-config.sh && exec nginx -g 'daemon off;'"
     ports:
       - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-pusanpino.kro.kr}
+      APP_DOMAIN_ALIASES: ${APP_DOMAIN_ALIASES:-}
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx:/opt/pinocchio-nginx:ro
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt:ro
     depends_on:
       web:
         condition: service_started
       api:
         condition: service_started
+
+  certbot:
+    image: certbot/certbot:latest
+    profiles:
+      - ssl
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt
 
   web:
     image: node:22-alpine
@@ -74,5 +89,7 @@ services:
 
 volumes:
   db_data:
+  certbot_www:
+  letsencrypt:
   web_node_modules:
   api_node_modules:
