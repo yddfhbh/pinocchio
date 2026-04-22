@@ -1,4 +1,4 @@
-import { isAdminRequest } from "./_auth.js";
+import { isAdminRequest } from "./_admin-auth.js";
 import { ensureAboutContentTable, query } from "./_db.js";
 import { normalizeAboutContent } from "../src/lib/aboutContent.js";
 

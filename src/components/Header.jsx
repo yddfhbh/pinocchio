@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { PromptDialog } from "./Dialog";
 
-function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
+function Header({ isAdmin, isConfigured, isLoading, isSubmitting, onLogin, onLogout }) {
   const [status, setStatus] = useState(null);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [adminCode, setAdminCode] = useState("");
@@ -24,6 +24,15 @@ function Header({ isAdmin, isLoading, isSubmitting, onLogin, onLogout }) {
 
       return;
     }
+
+    if (!isConfigured) {
+      setStatus({
+        type: "error",
+        text: "관리자 로그인이 아직 설정되지 않았습니다. ADMIN_CODE 또는 ADMIN_SESSION_SECRET을 확인해 주세요.",
+      });
+      return;
+    }
+
     setAdminCode("");
     setAdminCodeError("");
     setIsLoginDialogOpen(true);

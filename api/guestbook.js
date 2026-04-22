@@ -4,7 +4,7 @@ import {
   GUESTBOOK_MESSAGE_LIMIT,
   GUESTBOOK_NICKNAME_LIMIT,
 } from "../src/lib/guestbook.js";
-import { isAdminRequest } from "./_auth.js";
+import { isAdminRequest } from "./_admin-auth.js";
 import { ensureGuestbookTable, query } from "./_db.js";
 
 function toEntry(row) {

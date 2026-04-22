@@ -6,7 +6,7 @@ import {
   normalizeHomeVideoCategory,
   toHomeVideoEmbedUrl,
 } from "../src/lib/homeVideos.js";
-import { isAdminRequest } from "./_auth.js";
+import { isAdminRequest } from "./_admin-auth.js";
 import { ensureHomeVideosTable, query } from "./_db.js";
 
 function sendJson(response, statusCode, payload) {

@@ -1,5 +1,5 @@
 import { handleUpload } from "@vercel/blob/client";
-import { isAdminRequest } from "./_auth.js";
+import { isAdminRequest } from "./_admin-auth.js";
 import { enforceRateLimit } from "./_rate-limit.js";
 import {
   isInvalidJsonBodyError,

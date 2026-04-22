@@ -7,6 +7,7 @@ import {
 
 function useAdminSession() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,10 +22,12 @@ function useAdminSession() {
 
         if (!cancelled) {
           setIsAdmin(result.isAdmin);
+          setIsConfigured(result.isConfigured);
         }
       } catch {
         if (!cancelled) {
           setIsAdmin(false);
+          setIsConfigured(false);
         }
       } finally {
         if (!cancelled) {
@@ -46,6 +49,7 @@ function useAdminSession() {
     try {
       await loginAdminSession(code);
       setIsAdmin(true);
+      setIsConfigured(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -64,6 +68,7 @@ function useAdminSession() {
 
   return {
     isAdmin,
+    isConfigured,
     isLoading,
     isSubmitting,
     login,

@@ -2,8 +2,10 @@ import {
   assertAdminCode,
   clearAdminSessionCookie,
   createAdminSessionCookie,
+  isAdminAuthConfigurationError,
+  isAdminAuthConfigured,
   isAdminRequest,
-} from "./_auth.js";
+} from "./_admin-auth.js";
 import { clearRateLimit, enforceRateLimit } from "./_rate-limit.js";
 import {
   isInvalidJsonBodyError,
@@ -21,6 +23,7 @@ export default async function handler(request, response) {
   if (request.method === "GET") {
     return sendJson(response, 200, {
       isAdmin: isAdminRequest(request),
+      isConfigured: isAdminAuthConfigured(),
     });
   }
 
@@ -56,6 +59,13 @@ export default async function handler(request, response) {
         { "Set-Cookie": createAdminSessionCookie() }
       );
     } catch (error) {
+      if (isAdminAuthConfigurationError(error)) {
+        return sendJson(response, 503, {
+          error: error.message,
+          isConfigured: false,
+        });
+      }
+
       if (isInvalidJsonBodyError(error)) {
         return sendJson(response, 400, {
           error: "Invalid request body.",

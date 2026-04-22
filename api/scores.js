@@ -1,5 +1,5 @@
 import { del } from "@vercel/blob";
-import { isAdminRequest } from "./_auth.js";
+import { isAdminRequest } from "./_admin-auth.js";
 import { ensureScoreTable, query } from "./_db.js";
 import {
   isInvalidJsonBodyError,

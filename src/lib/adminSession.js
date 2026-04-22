@@ -17,6 +17,7 @@ export async function fetchAdminSession() {
 
   return {
     isAdmin: Boolean(payload.isAdmin),
+    isConfigured: payload.isConfigured !== false,
   };
 }
 

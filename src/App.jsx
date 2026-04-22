@@ -17,6 +17,7 @@ function App() {
     <div className="site-wrapper">
       <Header
         isAdmin={adminSession.isAdmin}
+        isConfigured={adminSession.isConfigured}
         isLoading={adminSession.isLoading}
         isSubmitting={adminSession.isSubmitting}
         onLogin={adminSession.login}

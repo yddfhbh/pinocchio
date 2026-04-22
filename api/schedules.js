@@ -1,4 +1,4 @@
-import { isAdminRequest } from "./_auth.js";
+import { isAdminRequest } from "./_admin-auth.js";
 import { ensureScheduleTable, query } from "./_db.js";
 
 const SCHEDULE_TITLE_LIMIT = 80;
